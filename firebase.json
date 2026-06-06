@@ -4,7 +4,7 @@
     "indexes": "firestore.indexes.json"
   },
   "hosting": {
-    "site": "repfiles",
+    "site": "scalesync-pro",
     "source": ".",
     "ignore": [
       "firebase.json",

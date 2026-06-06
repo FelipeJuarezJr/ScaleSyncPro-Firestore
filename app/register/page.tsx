@@ -165,10 +165,10 @@ export default function RegisterPage() {
         <div className="auth-header">
           <div className="auth-brand">
             <i className="fas fa-dragon"></i>
-            <span>RepFiles</span>
+            <span>ScaleSyncPro</span>
           </div>
           <h1>Create Account</h1>
-          <p>Join RepFiles to start managing your reptile collection</p>
+          <p>Join ScaleSyncPro to start managing your reptile collection</p>
         </div>
 
         {errorMsg && (

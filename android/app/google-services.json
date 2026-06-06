@@ -9,7 +9,7 @@
       "client_info": {
         "mobilesdk_app_id": "1:373955522567:android:504b34bfd1bf989a5bbaa2",
         "android_client_info": {
-          "package_name": "com.example.repfiles_firestore"
+          "package_name": "com.example.scalesyncpro_firestore"
         }
       },
       "oauth_client": [
@@ -17,7 +17,7 @@
           "client_id": "373955522567-18dmpa645ihjf3qito69obhlesl364c8.apps.googleusercontent.com",
           "client_type": 1,
           "android_info": {
-            "package_name": "com.example.repfiles_firestore",
+            "package_name": "com.example.scalesyncpro_firestore",
             "certificate_hash": "efc5c4ae3adfa6da9e63d80d2f889e44851af474"
           }
         },

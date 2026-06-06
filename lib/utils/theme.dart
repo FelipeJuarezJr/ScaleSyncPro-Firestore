@@ -1,7 +1,7 @@
 import 'package:flutter/material.dart';
 
 class AppTheme {
-  // Color palette matching the original RepFiles design EXACTLY
+  // Color palette matching the original ScaleSyncPro design EXACTLY
   // Dark theme (Nocturnal Mode) - Primary colors
   static const Color primaryColor = Color(0xFF00FF00); // Bright green
   static const Color primaryLight = Color(0xFF00D4FF); // Cyan

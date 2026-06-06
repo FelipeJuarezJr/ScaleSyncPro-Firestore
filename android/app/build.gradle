@@ -27,7 +27,7 @@ apply plugin: 'com.google.gms.google-services'
 apply from: "$flutterRoot/packages/flutter_tools/gradle/flutter.gradle"
 
 android {
-    namespace "com.example.repfiles_firestore"
+    namespace "com.example.scalesyncpro_firestore"
     compileSdkVersion 35
     ndkVersion flutter.ndkVersion
 
@@ -45,7 +45,7 @@ android {
     }
 
     defaultConfig {
-        applicationId "com.example.repfiles_firestore"
+        applicationId "com.example.scalesyncpro_firestore"
         minSdkVersion 23
         targetSdkVersion 33
         versionCode flutterVersionCode.toInteger()

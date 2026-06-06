@@ -394,7 +394,7 @@ export default function DashboardPage() {
         <div className="nav-container">
           <div className="nav-brand">
             <i className="fas fa-dragon"></i>
-            <span>RepFiles</span>
+            <span>ScaleSyncPro</span>
           </div>
           
           <div className={`nav-menu ${mobileMenuOpen ? "active" : ""}`} style={mobileMenuOpen ? { display: "flex", flexDirection: "column", position: "absolute", top: "70px", left: 0, right: 0, backgroundColor: "var(--bg-primary)", padding: "20px", borderBottom: "1px solid var(--border-color)", gap: "15px" } : {}}>
@@ -670,7 +670,7 @@ export default function DashboardPage() {
                           <button 
                             className="btn btn-outline" 
                             style={{ padding: "4px 8px", fontSize: "0.8rem" }}
-                            onClick={() => setQrCodeData(`repfiles://reptile/${rep.id}`)}
+                            onClick={() => setQrCodeData(`scalesyncpro://reptile/${rep.id}`)}
                           >
                             <i className="fas fa-qrcode"></i> Generate
                           </button>

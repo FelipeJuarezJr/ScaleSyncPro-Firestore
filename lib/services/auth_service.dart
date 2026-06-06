@@ -47,7 +47,7 @@ class AuthService extends ChangeNotifier {
       // Sync login to secondary app
       try {
         await FirebaseAuth.instanceFor(
-          app: Firebase.app(FirebaseConfig.repFilesAppName),
+          app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
         ).signInWithEmailAndPassword(
           email: email,
           password: password,
@@ -56,7 +56,7 @@ class AuthService extends ChangeNotifier {
         // If account doesn't exist in the secondary app, register it there automatically
         try {
           await FirebaseAuth.instanceFor(
-            app: Firebase.app(FirebaseConfig.repFilesAppName),
+            app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
           ).createUserWithEmailAndPassword(
             email: email,
             password: password,
@@ -71,7 +71,7 @@ class AuthService extends ChangeNotifier {
   }
 
   /// Create a new user account in ReptiGram Firebase
-  /// Note: This creates accounts in ReptiGram's Firebase project, not RepFiles
+  /// Note: This creates accounts in ReptiGram's Firebase project, not ScaleSyncPro
   Future<void> createUserWithEmailAndPassword(
     String name,
     String email,
@@ -92,7 +92,7 @@ class AuthService extends ChangeNotifier {
       // Also register in secondary app
       try {
         final secCredential = await FirebaseAuth.instanceFor(
-          app: Firebase.app(FirebaseConfig.repFilesAppName),
+          app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
         ).createUserWithEmailAndPassword(
           email: email,
           password: password,
@@ -113,7 +113,7 @@ class AuthService extends ChangeNotifier {
     await _auth.signOut();
     try {
       await FirebaseAuth.instanceFor(
-        app: Firebase.app(FirebaseConfig.repFilesAppName),
+        app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
       ).signOut();
     } catch (e) {
       debugPrint('Secondary App signout warning: $e');
@@ -147,7 +147,7 @@ class AuthService extends ChangeNotifier {
         try {
           if (userCredential.credential != null) {
             await FirebaseAuth.instanceFor(
-              app: Firebase.app(FirebaseConfig.repFilesAppName),
+              app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
             ).signInWithCredential(userCredential.credential!);
           }
         } catch (e) {
@@ -205,7 +205,7 @@ class AuthService extends ChangeNotifier {
         // Also sign in to the secondary app!
         try {
           await FirebaseAuth.instanceFor(
-            app: Firebase.app(FirebaseConfig.repFilesAppName),
+            app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
           ).signInWithCredential(credential);
         } catch (e) {
           debugPrint('Secondary app Android Google Sign-In sync warning: $e');
@@ -226,7 +226,7 @@ class AuthService extends ChangeNotifier {
           print('   2. Package name mismatch');
           print('   3. OAuth client not configured correctly');
           print('   SHA-1 to register: EF:C5:C4:AE:3A:DF:A6:DA:9E:63:D8:0D:2F:88:9E:44:85:1A:F4:74');
-          print('   Package name: com.example.repfiles_firestore');
+          print('   Package name: com.example.scalesyncpro_firestore');
           print('   Make sure both are registered in ReptiGram Firebase (reptigramfirestore) project');
         }
       }

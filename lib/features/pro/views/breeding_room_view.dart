@@ -38,7 +38,7 @@ final reptilesProvider = FutureProvider.autoDispose<List<Reptile>>((ref) async {
 
 class BreedingService {
   FirebaseFirestore get _firestore => FirebaseFirestore.instanceFor(
-    app: Firebase.app(FirebaseConfig.repFilesAppName),
+    app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
   );
   
   String get _userId => FirebaseAuth.instanceFor(

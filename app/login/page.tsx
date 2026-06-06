@@ -109,7 +109,7 @@ export default function LoginPage() {
         <div className="auth-header">
           <div className="auth-brand">
             <i className="fas fa-dragon"></i>
-            <span>RepFiles</span>
+            <span>ScaleSyncPro</span>
           </div>
           <h1>Welcome Back</h1>
           <p>Sign in to manage your reptile collection</p>

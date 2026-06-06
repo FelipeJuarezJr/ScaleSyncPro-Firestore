@@ -51,17 +51,17 @@ Replace `YOUR_ACTUAL_CLIENT_ID` with the same client ID.
 
 #### Step 1: Add Android App to ReptiGram Firebase Console
 
-**IMPORTANT: You MUST use the ReptiGram Firebase project (reptigramfirestore), NOT the RepFiles Firebase project!**
+**IMPORTANT: You MUST use the ReptiGram Firebase project (reptigramfirestore), NOT the ScaleSyncPro Firebase project!**
 
 1. Go to [Firebase Console](https://console.firebase.google.com/)
 2. **Select the `reptigramfirestore` project** (ReptiGram Firebase - used for authentication)
-   - ⚠️ **NOT** `repfiles-prototype` (that's for data storage only)
+   - ⚠️ **NOT** `scalesync-pro` (that's for data storage only)
 3. Click the gear icon ⚙️ next to "Project Overview" → **Project settings**
 4. Scroll down to **Your apps** section
 5. If you don't see an Android app, click **Add app** → Choose **Android** icon
 6. Enter the following:
-   - **Android package name**: `com.example.repfiles_firestore`
-   - **App nickname** (optional): RepFiles Android
+   - **Android package name**: `com.example.scalesyncpro_firestore`
+   - **App nickname** (optional): ScaleSyncPro Android
    - **Debug signing certificate SHA-1**: `EF:C5:C4:AE:3A:DF:A6:DA:9E:63:D8:0D:2F:88:9E:44:85:1A:F4:74`
    - **Debug signing certificate SHA-256**: `6D:CD:E8:3B:E1:6F:C4:02:61:FB:E9:97:43:B8:BF:05:25:3A:32:06:55:D1:6F:45:71:0A:10:29:28:00:57:D4`
 7. Click **Register app**
@@ -117,5 +117,5 @@ If the Android app already exists in the **reptigramfirestore** project:
 - **Web PWA**: Requires explicit client ID configuration
 - **Android**: Uses client ID from `google-services.json` automatically
 - Both platforms authenticate through **ReptiGram Firebase** (reptigramfirestore project)
-- User data is stored in **RepFiles Firebase** (repfiles-prototype project)
+- User data is stored in **ScaleSyncPro Firebase** (scalesync-pro project)
 

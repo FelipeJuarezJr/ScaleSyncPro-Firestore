@@ -2,7 +2,7 @@ import React from 'react';
 import './globals.css';
 
 export const metadata = {
-  title: 'RepFiles - Reptile Management App',
+  title: 'ScaleSyncPro - Reptile Management App',
   description: 'A Progressive Web App for managing reptile collections, breeding projects, schedules, and inventory.',
 };
 

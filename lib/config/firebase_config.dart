@@ -2,7 +2,7 @@ import 'package:firebase_core/firebase_core.dart';
 
 /// Firebase Configuration for dual Firebase setup
 /// - ReptiGram Firebase: Used for authentication only
-/// - RepFiles Firebase: Used for all data operations (Firestore, Storage)
+/// - ScaleSyncPro Firebase: Used for all data operations (Firestore, Storage)
 
 class FirebaseConfig {
   // ReptiGram Firebase - Authentication only
@@ -22,19 +22,20 @@ class FirebaseConfig {
   // For web application type
   static const String googleWebClientId = '373955522567-qr8497a63r5g1dn6nn5hufmluldrp1kl.apps.googleusercontent.com';
 
-  // RepFiles Firebase - Data storage (Firestore & Storage)
-  static const FirebaseOptions repFilesData = FirebaseOptions(
-    apiKey: 'AIzaSyBq4XiO6Ivp5eCuZtLWeBHmXF19kjtA_X4',
-    appId: '1:551254748034:web:532aba0df880b84542fd9b',
-    messagingSenderId: '551254748034',
-    projectId: 'repfiles-prototype',
-    authDomain: 'repfiles-prototype.firebaseapp.com',
-    storageBucket: 'repfiles-prototype.firebasestorage.app',
+  // ScaleSyncPro Firebase - Data storage (Firestore & Storage)
+  static const FirebaseOptions scaleSyncProData = FirebaseOptions(
+    apiKey: 'AIzaSyCgE2e8RPN0JOWR8MFA1HTfDos3qmmkmEg',
+    appId: '1:123833527982:web:36b21425fc1127c290473f',
+    messagingSenderId: '123833527982',
+    projectId: 'scalesync-pro',
+    authDomain: 'scalesync-pro.firebaseapp.com',
+    storageBucket: 'scalesync-pro.firebasestorage.app',
+    measurementId: 'G-9BCWD33SRY',
   );
 
   // App names for Firebase instances
   static const String reptiGramAppName = 'reptiGramAuth';
-  static const String repFilesAppName = 'repFilesData';
+  static const String scaleSyncProAppName = 'scaleSyncProData';
   static const String defaultAppName = '[DEFAULT]';
 }
 

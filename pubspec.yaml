@@ -1,4 +1,4 @@
-name: repfiles_firestore
+name: scalesyncpro_firestore
 description: A Flutter application for managing reptile collections, breeding projects, schedules, and inventory.
 publish_to: 'none'
 

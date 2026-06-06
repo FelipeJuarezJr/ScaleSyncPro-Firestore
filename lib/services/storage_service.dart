@@ -4,13 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../config/firebase_config.dart';
 
-/// StorageService uses RepFiles Firebase for all file storage operations
+/// StorageService uses ScaleSyncPro Firebase for all file storage operations
 /// Gets user ID from ReptiGram Firebase Auth (default app)
-/// Stores all files in RepFiles Firebase Storage
+/// Stores all files in ScaleSyncPro Firebase Storage
 class StorageService {
-  // Use RepFiles Firebase for Storage operations
+  // Use ScaleSyncPro Firebase for Storage operations
   FirebaseStorage get _storage => FirebaseStorage.instanceFor(
-    app: Firebase.app(FirebaseConfig.repFilesAppName),
+    app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
   );
   
   // Get user ID from ReptiGram Auth (default app)

@@ -34,19 +34,19 @@ void main() async {
       }
     }
     
-    // Initialize RepFiles Firebase (secondary app for data storage)
+    // Initialize ScaleSyncPro Firebase (secondary app for data storage)
     try {
       await Firebase.initializeApp(
-        name: FirebaseConfig.repFilesAppName,
-        options: FirebaseConfig.repFilesData,
+        name: FirebaseConfig.scaleSyncProAppName,
+        options: FirebaseConfig.scaleSyncProData,
       );
-      debugPrint('✅ RepFiles Firebase app initialized: ${FirebaseConfig.repFilesData.projectId}');
+      debugPrint('✅ ScaleSyncPro Firebase app initialized: ${FirebaseConfig.scaleSyncProData.projectId}');
     } catch (e) {
       // If duplicate app error (shouldn't happen, but handle it)
       if (e.toString().contains('duplicate-app')) {
-        debugPrint('✅ RepFiles Firebase app already exists');
+        debugPrint('✅ ScaleSyncPro Firebase app already exists');
       } else {
-        debugPrint('❌ Error initializing RepFiles app: $e');
+        debugPrint('❌ Error initializing ScaleSyncPro app: $e');
         rethrow;
       }
     }
@@ -65,12 +65,12 @@ void main() async {
   
   await SharedPreferences.getInstance();
   
-  debugPrint('🚀 Starting RepFiles app...');
-  runApp(const ProviderScope(child: RepFilesApp()));
+  debugPrint('🚀 Starting ScaleSyncPro app...');
+  runApp(const ProviderScope(child: ScaleSyncProApp()));
 }
 
-class RepFilesApp extends StatelessWidget {
-  const RepFilesApp({super.key});
+class ScaleSyncProApp extends StatelessWidget {
+  const ScaleSyncProApp({super.key});
 
   @override
   Widget build(BuildContext context) {
@@ -82,7 +82,7 @@ class RepFilesApp extends StatelessWidget {
       child: legacy_provider.Consumer2<AuthService, ThemeService>(
         builder: (context, authService, themeService, child) {
           return MaterialApp(
-            title: 'RepFiles',
+            title: 'ScaleSyncPro',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,

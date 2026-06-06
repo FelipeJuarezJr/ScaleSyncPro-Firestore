@@ -4,13 +4,13 @@ import 'package:firebase_core/firebase_core.dart';
 import '../config/firebase_config.dart';
 import '../models/reptile.dart';
 
-/// ReptileService uses RepFiles Firebase for all data operations
+/// ReptileService uses ScaleSyncPro Firebase for all data operations
 /// Gets user ID from ReptiGram Firebase Auth (default app)
-/// Stores all data in RepFiles Firebase Firestore
+/// Stores all data in ScaleSyncPro Firebase Firestore
 class ReptileService {
-  // Use RepFiles Firebase for Firestore operations
+  // Use ScaleSyncPro Firebase for Firestore operations
   FirebaseFirestore get _firestore => FirebaseFirestore.instanceFor(
-    app: Firebase.app(FirebaseConfig.repFilesAppName),
+    app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
   );
   
   // Get user ID from ReptiGram Auth (default app)

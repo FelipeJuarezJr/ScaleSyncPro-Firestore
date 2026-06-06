@@ -1,13 +1,13 @@
-# RepFiles - Reptile Management System
+# ScaleSyncPro - Reptile Management System
 
 A Flutter application for managing reptile collections, breeding projects, schedules, and inventory. Built with the same beautiful design as the original HTML version.
 
 ## 🔗 **Important: ReptiGram Integration**
 
-**RepFiles connects to ReptiGram's Firebase project** for authentication. This means:
-- ✅ **Same login credentials** - Users can log into RepFiles with the same email/password they use for ReptiGram
+**ScaleSyncPro connects to ReptiGram's Firebase project** for authentication. This means:
+- ✅ **Same login credentials** - Users can log into ScaleSyncPro with the same email/password they use for ReptiGram
 - ✅ **Shared user accounts** - No need to create separate accounts
-- ✅ **Read-only access** - RepFiles cannot modify ReptiGram's data, only authenticate users
+- ✅ **Read-only access** - ScaleSyncPro cannot modify ReptiGram's data, only authenticate users
 - 🔒 **Secure integration** - Uses ReptiGram's existing Firebase authentication system
 
 ## ✨ Features
@@ -37,7 +37,7 @@ A Flutter application for managing reptile collections, breeding projects, sched
 1. **Clone the repository**
    ```bash
    git clone <repository-url>
-   cd RepFilesFirestore
+   cd ScaleSynPro-Firestore
    ```
 
 2. **Install dependencies**
@@ -153,11 +153,11 @@ flutter build ios
 
 ## 🔐 Authentication Flow
 
-1. **User opens RepFiles**
+1. **User opens ScaleSyncPro**
 2. **Login screen** - Beautiful gradient background
 3. **Enter credentials** - Same as ReptiGram account
 4. **Authentication** - Validated against ReptiGram's Firebase
-5. **Access granted** - User can use RepFiles with their existing account
+5. **Access granted** - User can use ScaleSyncPro with their existing account
 
 ## 🎯 Development Status
 
@@ -186,8 +186,8 @@ This project is licensed under the MIT License.
 ## 🔗 Related Projects
 
 - **ReptiGram** - The main reptile social media platform
-- **RepFiles** - This reptile management system (connects to ReptiGram)
+- **ScaleSyncPro** - This reptile management system (connects to ReptiGram)
 
 ---
 
-**Note**: RepFiles is designed to work alongside ReptiGram, providing additional management tools while using the same user authentication system. 
+**Note**: ScaleSyncPro is designed to work alongside ReptiGram, providing additional management tools while using the same user authentication system. 
