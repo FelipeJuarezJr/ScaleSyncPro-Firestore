@@ -64,3 +64,9 @@ ios/Pods/
 
 # Scripts
 *.sh 
+
+# Next.js
+.next/
+node_modules/
+.env*.local
+dist/

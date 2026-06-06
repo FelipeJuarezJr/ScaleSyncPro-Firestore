@@ -1,0 +1,90 @@
+rules_version = '2';
+service cloud.firestore {
+  match /databases/{database}/documents {
+
+    // General User document rules
+    match /users/{userId} {
+      allow read, write: if request.auth != null && request.auth.uid == userId;
+
+      // Subcollection for User Reptiles
+      match /reptiles/{reptileId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Subcollection for User Breeding Logs
+      match /breeding_logs/{logId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+
+      // Subcollection for User Clutches
+      match /clutches/{clutchId} {
+        allow read, write: if request.auth != null && request.auth.uid == userId;
+      }
+    }
+
+    // Social Media Feeds (posts collection)
+    match /posts/{postId} {
+      // Any authenticated user can read posts
+      allow read: if request.auth != null;
+      
+      // Must be authenticated, the post creator UID must match auth.uid, and have the uid field
+      allow create: if request.auth != null 
+        && request.resource.data.uid == request.auth.uid 
+        && request.resource.data.keys().hasAny(['uid']);
+        
+      // Update validation (Delta analysis):
+      // Owners can update any properties. Non-owners can only update like metrics.
+      allow update: if request.auth != null && (
+        resource.data.uid == request.auth.uid 
+        || request.resource.data.diff(resource.data).affectedKeys().hasOnly(['likesCount', 'recentLikers', 'likesMap'])
+      );
+      
+      // Only the owner or an admin can delete posts (Custom Claims check)
+      allow delete: if request.auth != null && (
+        resource.data.uid == request.auth.uid 
+        || request.auth.token.admin == true
+      );
+
+      // Comments subcollection
+      match /comments/{commentId} {
+        allow read: if request.auth != null;
+        allow create: if request.auth != null 
+          && request.resource.data.uid == request.auth.uid
+          && request.resource.data.keys().hasAny(['uid']);
+        allow update, delete: if request.auth != null 
+          && (resource.data.uid == request.auth.uid || request.auth.token.admin == true);
+      }
+    }
+
+    // Internal Marketplace Listings
+    match /listings/{listingId} {
+      // Any authenticated user can browse marketplace listings
+      allow read: if request.auth != null;
+      
+      // Must be authenticated and seller UID must match auth.uid
+      allow create: if request.auth != null 
+        && request.resource.data.uid == request.auth.uid
+        && request.resource.data.keys().hasAny(['uid']);
+        
+      // Only owner or admin can update/delete listings
+      allow update, delete: if request.auth != null 
+        && (resource.data.uid == request.auth.uid || request.auth.token.admin == true);
+    }
+
+    // Direct Messaging Chat Threads (Regex-Based String Match Checks)
+    match /chats/{chatId} {
+      allow read, write: if request.auth != null 
+        && (chatId.matches(request.auth.uid + '_.*') || chatId.matches('.*_' + request.auth.uid));
+
+      match /messages/{messageId} {
+        allow read, write: if request.auth != null 
+          && (chatId.matches(request.auth.uid + '_.*') || chatId.matches('.*_' + request.auth.uid));
+      }
+    }
+
+    // Admin Audit Logs (Requires Custom Admin Claim Verification)
+    match /audit_logs/{logId} {
+      allow read, write: if request.auth != null && request.auth.token.admin == true;
+    }
+  }
+}

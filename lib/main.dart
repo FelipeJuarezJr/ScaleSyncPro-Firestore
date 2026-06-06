@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
-import 'package:provider/provider.dart';
+import 'package:provider/provider.dart' as legacy_provider;
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'config/firebase_config.dart';
 import 'screens/auth/login_screen.dart';
@@ -65,7 +66,7 @@ void main() async {
   await SharedPreferences.getInstance();
   
   debugPrint('🚀 Starting RepFiles app...');
-  runApp(const RepFilesApp());
+  runApp(const ProviderScope(child: RepFilesApp()));
 }
 
 class RepFilesApp extends StatelessWidget {
@@ -73,12 +74,12 @@ class RepFilesApp extends StatelessWidget {
 
   @override
   Widget build(BuildContext context) {
-    return MultiProvider(
+    return legacy_provider.MultiProvider(
       providers: [
-        ChangeNotifierProvider(create: (_) => AuthService()),
-        ChangeNotifierProvider(create: (_) => ThemeService()),
+        legacy_provider.ChangeNotifierProvider(create: (_) => AuthService()),
+        legacy_provider.ChangeNotifierProvider(create: (_) => ThemeService()),
       ],
-      child: Consumer2<AuthService, ThemeService>(
+      child: legacy_provider.Consumer2<AuthService, ThemeService>(
         builder: (context, authService, themeService, child) {
           return MaterialApp(
             title: 'RepFiles',

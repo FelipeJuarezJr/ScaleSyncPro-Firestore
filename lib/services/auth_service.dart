@@ -43,6 +43,28 @@ class AuthService extends ChangeNotifier {
         email: email,
         password: password,
       );
+
+      // Sync login to secondary app
+      try {
+        await FirebaseAuth.instanceFor(
+          app: Firebase.app(FirebaseConfig.repFilesAppName),
+        ).signInWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+      } catch (e) {
+        // If account doesn't exist in the secondary app, register it there automatically
+        try {
+          await FirebaseAuth.instanceFor(
+            app: Firebase.app(FirebaseConfig.repFilesAppName),
+          ).createUserWithEmailAndPassword(
+            email: email,
+            password: password,
+          );
+        } catch (regErr) {
+          debugPrint('Secondary App auth sync warning: $regErr');
+        }
+      }
     } catch (e) {
       rethrow;
     }
@@ -66,6 +88,22 @@ class AuthService extends ChangeNotifier {
         await userCredential.user!.updateDisplayName(name);
         await userCredential.user!.reload();
       }
+
+      // Also register in secondary app
+      try {
+        final secCredential = await FirebaseAuth.instanceFor(
+          app: Firebase.app(FirebaseConfig.repFilesAppName),
+        ).createUserWithEmailAndPassword(
+          email: email,
+          password: password,
+        );
+        if (secCredential.user != null && name.isNotEmpty) {
+          await secCredential.user!.updateDisplayName(name);
+          await secCredential.user!.reload();
+        }
+      } catch (e) {
+        debugPrint('Secondary App registration sync warning: $e');
+      }
     } catch (e) {
       rethrow;
     }
@@ -73,6 +111,13 @@ class AuthService extends ChangeNotifier {
 
   Future<void> signOut() async {
     await _auth.signOut();
+    try {
+      await FirebaseAuth.instanceFor(
+        app: Firebase.app(FirebaseConfig.repFilesAppName),
+      ).signOut();
+    } catch (e) {
+      debugPrint('Secondary App signout warning: $e');
+    }
   }
 
   /// Sign in with Google using ReptiGram Firebase
@@ -86,24 +131,30 @@ class AuthService extends ChangeNotifier {
 
       if (kIsWeb) {
         // For Web PWA: Use Firebase Auth's native Google Sign-In (same as ReptiGram)
-        // This uses Firebase Auth's web implementation which handles OAuth natively
-        // No need for google_sign_in package on web - Firebase Auth handles it all
         final GoogleAuthProvider googleProvider = GoogleAuthProvider();
         
         if (kDebugMode) {
           print('Using Firebase Auth native Google Sign-In for web (same as ReptiGram)...');
         }
 
-        // Firebase Auth web uses signInWithPopup internally via the web implementation
-        // This is the native method that ReptiGram uses - no People API needed
-        await _auth.signInWithPopup(googleProvider);
+        final UserCredential userCredential = await _auth.signInWithPopup(googleProvider);
         
         if (kDebugMode) {
           print('Google Sign-In successful via Firebase Auth native!');
         }
+
+        // Also sign in to the secondary app!
+        try {
+          if (userCredential.credential != null) {
+            await FirebaseAuth.instanceFor(
+              app: Firebase.app(FirebaseConfig.repFilesAppName),
+            ).signInWithCredential(userCredential.credential!);
+          }
+        } catch (e) {
+          debugPrint('Secondary app Google Sign-In sync warning: $e');
+        }
       } else {
         // For Android: Use google_sign_in package (works well on mobile)
-        // Must provide serverClientId (OAuth 2.0 Web Client ID) for Firebase Auth integration
         final GoogleSignIn googleSignIn = GoogleSignIn(
           scopes: ['email', 'profile'],
           serverClientId: FirebaseConfig.googleWebClientId,
@@ -149,6 +200,15 @@ class AuthService extends ChangeNotifier {
 
         if (kDebugMode) {
           print('Google Sign-In successful!');
+        }
+
+        // Also sign in to the secondary app!
+        try {
+          await FirebaseAuth.instanceFor(
+            app: Firebase.app(FirebaseConfig.repFilesAppName),
+          ).signInWithCredential(credential);
+        } catch (e) {
+          debugPrint('Secondary app Android Google Sign-In sync warning: $e');
         }
       }
 
