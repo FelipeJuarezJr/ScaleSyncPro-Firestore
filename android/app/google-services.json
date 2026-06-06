@@ -1,0 +1,92 @@
+{
+  "project_info": {
+    "project_number": "373955522567",
+    "project_id": "reptigramfirestore",
+    "storage_bucket": "reptigramfirestore.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373955522567:android:504b34bfd1bf989a5bbaa2",
+        "android_client_info": {
+          "package_name": "com.example.repfiles_firestore"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "373955522567-18dmpa645ihjf3qito69obhlesl364c8.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "com.example.repfiles_firestore",
+            "certificate_hash": "efc5c4ae3adfa6da9e63d80d2f889e44851af474"
+          }
+        },
+        {
+          "client_id": "373955522567-qr8497a63r5g1dn6nn5hufmluldrp1kl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBevZO-43EmlnYOhTWg_xT6UcwrmVAkSsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "373955522567-qr8497a63r5g1dn6nn5hufmluldrp1kl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    },
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:373955522567:android:b4650d05f0f8b4295bbaa2",
+        "android_client_info": {
+          "package_name": "reptigramfirebase.android"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "373955522567-ota4e4ftas88qtm2kd6l5uns51ov7idf.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "reptigramfirebase.android",
+            "certificate_hash": "efc5c4ae3adfa6da9e63d80d2f889e44851af474"
+          }
+        },
+        {
+          "client_id": "373955522567-tsqpa30ns7c79lu6vss9g4am85io174s.apps.googleusercontent.com",
+          "client_type": 1,
+          "android_info": {
+            "package_name": "reptigramfirebase.android",
+            "certificate_hash": "d050dfef742f856b1b46f05ce28a9f8254e31969"
+          }
+        },
+        {
+          "client_id": "373955522567-qr8497a63r5g1dn6nn5hufmluldrp1kl.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBevZO-43EmlnYOhTWg_xT6UcwrmVAkSsc"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "373955522567-qr8497a63r5g1dn6nn5hufmluldrp1kl.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

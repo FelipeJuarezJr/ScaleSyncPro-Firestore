@@ -1,0 +1,772 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>RepFiles - Reptile Management App</title>
+    <link rel="stylesheet" href="styles.css">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/qrcode@1.5.3/build/qrcode.min.js"></script>
+</head>
+<body>
+    <!-- Navigation -->
+    <nav class="navbar">
+        <div class="nav-container">
+            <div class="nav-brand">
+                <i class="fas fa-dragon"></i>
+                <span>RepFiles</span>
+            </div>
+            <div class="nav-menu">
+                <a href="index.html#dashboard" class="nav-link active" data-section="dashboard">
+                    <i class="fas fa-home"></i>
+                    <span>Dashboard</span>
+                </a>
+                <a href="index.html#animals" class="nav-link" data-section="animals">
+                    <i class="fas fa-dragon"></i>
+                    <span>Reptiles</span>
+                </a>
+                <a href="index.html#breeding" class="nav-link" data-section="breeding">
+                    <i class="fas fa-dna"></i>
+                    <span>Breeding</span>
+                </a>
+                <a href="index.html#schedule" class="nav-link" data-section="schedule">
+                    <i class="fas fa-calendar"></i>
+                    <span>Schedule</span>
+                </a>
+                <a href="index.html#inventory" class="nav-link" data-section="inventory">
+                    <i class="fas fa-box"></i>
+                    <span>Inventory</span>
+                </a>
+                <a href="index.html#reports" class="nav-link" data-section="reports">
+                    <i class="fas fa-chart-bar"></i>
+                    <span>Reports</span>
+                </a>
+            </div>
+            <div class="nav-user">
+                <div class="user-info" id="userInfo">
+                    <span class="plan-badge" id="userPlan">Pro</span>
+                    <span class="user-name" id="userName">John Doe</span>
+                </div>
+                <div class="user-menu" id="userMenu">
+                    <button class="user-menu-toggle" id="userMenuToggle">
+                        <i class="fas fa-user-circle"></i>
+                    </button>
+                    <div class="user-dropdown" id="userDropdown">
+                        <div class="user-dropdown-header">
+                            <span id="dropdownUserName">John Doe</span>
+                            <span id="dropdownUserEmail">john@example.com</span>
+                        </div>
+                        <div class="user-dropdown-actions">
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-user"></i>
+                                Profile
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-cog"></i>
+                                Settings
+                            </a>
+                            <a href="#" class="dropdown-item">
+                                <i class="fas fa-question-circle"></i>
+                                Help
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="themeToggle">
+                                <i class="fas fa-moon"></i>
+                                <span id="themeText">Switch to Light</span>
+                            </a>
+                            <div class="dropdown-divider"></div>
+                            <a href="#" class="dropdown-item" id="logoutBtn">
+                                <i class="fas fa-sign-out-alt"></i>
+                                Sign Out
+                            </a>
+                        </div>
+                    </div>
+                </div>
+
+                <button class="menu-toggle" id="menuToggle">
+                    <i class="fas fa-bars"></i>
+                </button>
+            </div>
+        </div>
+    </nav>
+
+    <!-- Main Content -->
+    <main class="main-content">
+        <!-- Dashboard Section -->
+        <section id="dashboard" class="content-section active">
+            <div class="section-header">
+                <h1>Dashboard</h1>
+                <p>Welcome back! Here's an overview of your reptile collection.</p>
+            </div>
+            
+            <div class="dashboard-grid">
+                <!-- Stats Cards -->
+                <div class="stats-grid">
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dragon"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Total Reptiles</h3>
+                            <p class="stat-number">47</p>
+                            <p class="stat-change positive">+3 this month</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dna"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Active Breeding</h3>
+                            <p class="stat-number">8</p>
+                            <p class="stat-change">2 clutches expected</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-calendar-check"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Today's Tasks</h3>
+                            <p class="stat-number">12</p>
+                            <p class="stat-change">3 overdue</p>
+                        </div>
+                    </div>
+                    
+                    <div class="stat-card">
+                        <div class="stat-icon">
+                            <i class="fas fa-dollar-sign"></i>
+                        </div>
+                        <div class="stat-content">
+                            <h3>Monthly Costs</h3>
+                            <p class="stat-number">$284</p>
+                            <p class="stat-change negative">+$45 vs last month</p>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent Activity -->
+                <div class="dashboard-section">
+                    <h2>Recent Activity</h2>
+                    <div class="activity-list">
+                        <div class="activity-item">
+                            <div class="activity-icon feeding">
+                                <i class="fas fa-utensils"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Feeding - Ball Python #BP001</h4>
+                                <p>Fed 1 medium rat (150g)</p>
+                                <span class="activity-time">2 hours ago</span>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon breeding">
+                                <i class="fas fa-dna"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Breeding - Leopard Gecko Pair</h4>
+                                <p>Successful pairing recorded</p>
+                                <span class="activity-time">1 day ago</span>
+                            </div>
+                        </div>
+                        
+                        <div class="activity-item">
+                            <div class="activity-icon health">
+                                <i class="fas fa-heartbeat"></i>
+                            </div>
+                            <div class="activity-content">
+                                <h4>Health Check - Bearded Dragon</h4>
+                                <p>Weight: 450g, Length: 18"</p>
+                                <span class="activity-time">3 days ago</span>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Growth Chart -->
+                <div class="dashboard-section">
+                    <h2>Growth Tracking</h2>
+                    <div class="chart-container">
+                        <canvas id="growthChart"></canvas>
+                    </div>
+                </div>
+
+                <!-- Quick Actions -->
+                <div class="dashboard-section">
+                    <h2>Quick Actions</h2>
+                    <div class="quick-actions">
+                                            <button class="action-btn" onclick="showModal('addReptileModal')">
+                        <i class="fas fa-plus"></i>
+                        Add Reptile
+                    </button>
+                        <button class="action-btn" onclick="showModal('addFeedingModal')">
+                            <i class="fas fa-utensils"></i>
+                            Log Feeding
+                        </button>
+                        <button class="action-btn" onclick="showModal('addBreedingModal')">
+                            <i class="fas fa-dna"></i>
+                            New Breeding
+                        </button>
+                        <button class="action-btn" onclick="showModal('addTaskModal')">
+                            <i class="fas fa-calendar-plus"></i>
+                            Schedule Task
+                        </button>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reptiles Section -->
+        <section id="animals" class="content-section">
+            <div class="section-header">
+                <h1>Reptile Management</h1>
+                <div class="header-actions">
+                    <button class="btn btn-primary" onclick="showModal('addReptileModal')">
+                        <i class="fas fa-plus"></i> Add Reptile
+                    </button>
+                    <div class="search-box">
+                        <i class="fas fa-search"></i>
+                        <input type="text" placeholder="Search reptiles..." id="animalSearch">
+                    </div>
+                </div>
+            </div>
+
+            <div class="filters">
+                <select id="speciesFilter">
+                    <option value="">All Species</option>
+                    <option value="ball-python">Ball Python</option>
+                    <option value="leopard-gecko">Leopard Gecko</option>
+                    <option value="bearded-dragon">Bearded Dragon</option>
+                    <option value="corn-snake">Corn Snake</option>
+                </select>
+                <select id="statusFilter">
+                    <option value="">All Status</option>
+                    <option value="active">Active</option>
+                    <option value="breeding">Breeding</option>
+                    <option value="sold">Sold</option>
+                    <option value="deceased">Deceased</option>
+                </select>
+                                    <button class="btn btn-secondary" onclick="exportReptiles()">
+                        <i class="fas fa-download"></i> Export
+                    </button>
+            </div>
+
+            <div class="reptiles-grid" id="reptilesGrid">
+                <!-- Reptile cards will be populated here -->
+            </div>
+        </section>
+
+        <!-- Breeding Section -->
+        <section id="breeding" class="content-section">
+            <div class="section-header">
+                <h1>Breeding Projects</h1>
+                <button class="btn btn-primary" onclick="showModal('addBreedingModal')">
+                    <i class="fas fa-plus"></i> New Project
+                </button>
+            </div>
+
+            <div class="breeding-tabs">
+                <button class="tab-btn active" data-tab="active">Active Projects</button>
+                <button class="tab-btn" data-tab="genetics">Genetics Calculator</button>
+                <button class="tab-btn" data-tab="clutches">Clutch Tracking</button>
+            </div>
+
+            <div class="tab-content">
+                <div id="active-projects" class="tab-pane active">
+                    <div class="breeding-projects-grid" id="breedingProjectsGrid">
+                        <!-- Breeding projects will be populated here -->
+                    </div>
+                </div>
+
+                <div id="genetics-calculator" class="tab-pane">
+                    <div class="genetics-calculator">
+                        <h2>Genetics Calculator</h2>
+                        <div class="calculator-form">
+                            <div class="parent-inputs">
+                                <div class="parent-input">
+                                    <label>Male Morphs</label>
+                                    <select id="maleMorphs" multiple>
+                                        <option value="normal">Normal</option>
+                                        <option value="albino">Albino</option>
+                                        <option value="piebald">Piebald</option>
+                                        <option value="spider">Spider</option>
+                                        <option value="pastel">Pastel</option>
+                                    </select>
+                                </div>
+                                <div class="parent-input">
+                                    <label>Female Morphs</label>
+                                    <select id="femaleMorphs" multiple>
+                                        <option value="normal">Normal</option>
+                                        <option value="albino">Albino</option>
+                                        <option value="piebald">Piebald</option>
+                                        <option value="spider">Spider</option>
+                                        <option value="pastel">Pastel</option>
+                                    </select>
+                                </div>
+                            </div>
+                            <button class="btn btn-primary" onclick="calculateGenetics()">Calculate Offspring</button>
+                        </div>
+                        <div class="genetics-results" id="geneticsResults">
+                            <!-- Results will be displayed here -->
+                        </div>
+                    </div>
+                </div>
+
+                <div id="clutch-tracking" class="tab-pane">
+                    <div class="clutch-tracking">
+                        <h2>Clutch Tracking</h2>
+                        <div class="clutches-grid" id="clutchesGrid">
+                            <!-- Clutches will be populated here -->
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Schedule Section -->
+        <section id="schedule" class="content-section">
+            <div class="section-header">
+                <h1>Schedule & Tasks</h1>
+                <button class="btn btn-primary" onclick="showModal('addTaskModal')">
+                    <i class="fas fa-plus"></i> Add Task
+                </button>
+            </div>
+
+            <div class="schedule-view">
+                <div class="calendar-header">
+                    <button class="btn btn-secondary" onclick="previousMonth()">
+                        <i class="fas fa-chevron-left"></i>
+                    </button>
+                    <h2 id="currentMonth">January 2025</h2>
+                    <button class="btn btn-secondary" onclick="nextMonth()">
+                        <i class="fas fa-chevron-right"></i>
+                    </button>
+                </div>
+                
+                <div class="calendar-grid" id="calendarGrid">
+                    <!-- Calendar will be populated here -->
+                </div>
+            </div>
+
+            <div class="task-list">
+                <h3>Today's Tasks</h3>
+                <div class="tasks" id="todayTasks">
+                    <!-- Tasks will be populated here -->
+                </div>
+            </div>
+        </section>
+
+        <!-- Inventory Section -->
+        <section id="inventory" class="content-section">
+            <div class="section-header">
+                <h1>Food Inventory & Costs</h1>
+                <button class="btn btn-primary" onclick="showModal('addInventoryModal')">
+                    <i class="fas fa-plus"></i> Add Item
+                </button>
+            </div>
+
+            <div class="inventory-grid">
+                <div class="inventory-section">
+                    <h2>Food Inventory</h2>
+                    <div class="inventory-items" id="foodInventory">
+                        <!-- Food items will be populated here -->
+                    </div>
+                </div>
+
+                <div class="inventory-section">
+                    <h2>Cost Tracking</h2>
+                    <div class="cost-chart">
+                        <canvas id="costChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        <!-- Reports Section -->
+        <section id="reports" class="content-section">
+            <div class="section-header">
+                <h1>Reports & Analytics</h1>
+            </div>
+
+            <div class="reports-grid">
+                <div class="report-card">
+                    <h3>Collection Overview</h3>
+                    <div class="report-content">
+                        <canvas id="speciesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Breeding Success Rate</h3>
+                    <div class="report-content">
+                        <canvas id="breedingChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Monthly Expenses</h3>
+                    <div class="report-content">
+                        <canvas id="expensesChart"></canvas>
+                    </div>
+                </div>
+
+                <div class="report-card">
+                    <h3>Growth Trends</h3>
+                    <div class="report-content">
+                        <canvas id="growthTrendsChart"></canvas>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
+
+    <!-- Modals -->
+    <!-- Add Reptile Modal -->
+    <div id="addReptileModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add New Reptile</h2>
+                <button class="modal-close" onclick="closeModal('addReptileModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addReptileForm">
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Species</label>
+                            <select name="species" required>
+                                <option value="">Select Species</option>
+                                <option value="ball-python">Ball Python</option>
+                                <option value="leopard-gecko">Leopard Gecko</option>
+                                <option value="bearded-dragon">Bearded Dragon</option>
+                                <option value="corn-snake">Corn Snake</option>
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Gender</label>
+                            <select name="gender" required>
+                                <option value="">Select Gender</option>
+                                <option value="male">Male</option>
+                                <option value="female">Female</option>
+                                <option value="unknown">Unknown</option>
+                            </select>
+                        </div>
+                    </div>
+                    
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Name/ID</label>
+                            <input type="text" name="name" placeholder="e.g., BP001" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Morph</label>
+                            <input type="text" name="morph" placeholder="e.g., Albino Piebald">
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Birth/Hatch Date</label>
+                            <input type="date" name="birthDate">
+                        </div>
+                        <div class="form-group">
+                            <label>Acquisition Date</label>
+                            <input type="date" name="acquisitionDate">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Breeder</label>
+                        <input type="text" name="breeder" placeholder="Breeder name">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Additional notes..."></textarea>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Photos</label>
+                        <input type="file" name="photos" multiple accept="image/*">
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addReptileModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Reptile</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Feeding Modal -->
+    <div id="addFeedingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Log Feeding</h2>
+                <button class="modal-close" onclick="closeModal('addFeedingModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addFeedingForm">
+                    <div class="form-group">
+                        <label>Reptile</label>
+                        <select name="reptile" required>
+                            <option value="">Select Reptile</option>
+                            <!-- Reptiles will be populated here -->
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Food Type</label>
+                            <input type="text" name="foodType" placeholder="e.g., Medium Rat" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Weight (g)</label>
+                            <input type="number" name="weight" placeholder="150">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Date & Time</label>
+                        <input type="datetime-local" name="feedingTime" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Feeding notes..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addFeedingModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Log Feeding</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Breeding Modal -->
+    <div id="addBreedingModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>New Breeding Project</h2>
+                <button class="modal-close" onclick="closeModal('addBreedingModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addBreedingForm">
+                    <div class="form-group">
+                        <label>Project Name</label>
+                        <input type="text" name="projectName" placeholder="e.g., Albino Piebald Project" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Male</label>
+                            <select name="male" required>
+                                <option value="">Select Male</option>
+                                <!-- Males will be populated here -->
+                            </select>
+                        </div>
+                        <div class="form-group">
+                            <label>Female</label>
+                            <select name="female" required>
+                                <option value="">Select Female</option>
+                                <!-- Females will be populated here -->
+                            </select>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Start Date</label>
+                        <input type="date" name="startDate" required>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Breeding notes..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addBreedingModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Create Project</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Task Modal -->
+    <div id="addTaskModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Schedule Task</h2>
+                <button class="modal-close" onclick="closeModal('addTaskModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addTaskForm">
+                    <div class="form-group">
+                        <label>Task Type</label>
+                        <select name="taskType" required>
+                            <option value="">Select Task Type</option>
+                            <option value="feeding">Feeding</option>
+                            <option value="cleaning">Cleaning</option>
+                            <option value="health-check">Health Check</option>
+                            <option value="breeding">Breeding</option>
+                            <option value="vet-visit">Vet Visit</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Reptile/Group</label>
+                        <select name="target">
+                            <option value="">All Reptiles</option>
+                            <!-- Reptiles and groups will be populated here -->
+                        </select>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Date</label>
+                            <input type="date" name="taskDate" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Time</label>
+                            <input type="time" name="taskTime" required>
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Repeat</label>
+                        <select name="repeat">
+                            <option value="none">No Repeat</option>
+                            <option value="daily">Daily</option>
+                            <option value="weekly">Weekly</option>
+                            <option value="monthly">Monthly</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Task notes..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addTaskModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Schedule Task</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add Inventory Modal -->
+    <div id="addInventoryModal" class="modal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2>Add Inventory Item</h2>
+                <button class="modal-close" onclick="closeModal('addInventoryModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <form id="addInventoryForm">
+                    <div class="form-group">
+                        <label>Item Name</label>
+                        <input type="text" name="itemName" placeholder="e.g., Medium Rats" required>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Quantity</label>
+                            <input type="number" name="quantity" placeholder="50" required>
+                        </div>
+                        <div class="form-group">
+                            <label>Unit</label>
+                            <input type="text" name="unit" placeholder="e.g., pieces, kg" required>
+                        </div>
+                    </div>
+
+                    <div class="form-row">
+                        <div class="form-group">
+                            <label>Cost per Unit</label>
+                            <input type="number" name="costPerUnit" placeholder="2.50" step="0.01">
+                        </div>
+                        <div class="form-group">
+                            <label>Total Cost</label>
+                            <input type="number" name="totalCost" placeholder="125.00" step="0.01">
+                        </div>
+                    </div>
+
+                    <div class="form-group">
+                        <label>Purchase Date</label>
+                        <input type="date" name="purchaseDate">
+                    </div>
+
+                    <div class="form-group">
+                        <label>Notes</label>
+                        <textarea name="notes" rows="3" placeholder="Inventory notes..."></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <button type="button" class="btn btn-secondary" onclick="closeModal('addInventoryModal')">Cancel</button>
+                        <button type="submit" class="btn btn-primary">Add Item</button>
+                    </div>
+                </form>
+            </div>
+        </div>
+    </div>
+
+    <!-- Reptile Detail Modal -->
+    <div id="reptileDetailModal" class="modal large">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h2 id="reptileDetailTitle">Reptile Details</h2>
+                <button class="modal-close" onclick="closeModal('reptileDetailModal')">
+                    <i class="fas fa-times"></i>
+                </button>
+            </div>
+            <div class="modal-body">
+                <div class="reptile-detail-tabs">
+                    <button class="tab-btn active" data-tab="info">Info</button>
+                    <button class="tab-btn" data-tab="history">History</button>
+                    <button class="tab-btn" data-tab="photos">Photos</button>
+                    <button class="tab-btn" data-tab="growth">Growth</button>
+                    <button class="tab-btn" data-tab="qr">QR Code</button>
+                </div>
+                
+                <div class="tab-content">
+                    <div id="reptile-info" class="tab-pane active">
+                        <!-- Reptile info will be populated here -->
+                    </div>
+                    <div id="reptile-history" class="tab-pane">
+                        <!-- Reptile history will be populated here -->
+                    </div>
+                    <div id="reptile-photos" class="tab-pane">
+                        <!-- Reptile photos will be populated here -->
+                    </div>
+                    <div id="reptile-growth" class="tab-pane">
+                        <!-- Reptile growth chart will be populated here -->
+                    </div>
+                    <div id="reptile-qr" class="tab-pane">
+                        <!-- QR code will be populated here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="script.js"></script>
+</body>
+</html> 
