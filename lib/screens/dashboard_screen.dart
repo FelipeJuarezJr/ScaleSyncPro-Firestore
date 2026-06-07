@@ -5,6 +5,8 @@ import '../utils/theme.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/activity_item.dart';
 import '../widgets/quick_action_button.dart';
+import '../widgets/add_reptile_modal.dart';
+
 
 class DashboardScreen extends StatefulWidget {
   const DashboardScreen({super.key});
@@ -607,14 +609,20 @@ class _DashboardScreenState extends State<DashboardScreen> {
   }
 
   void _showModal(String modalType) {
-    // TODO: Implement modal functionality
-    // This matches the HTML onclick="showModal('addReptileModal')" etc.
-    ScaffoldMessenger.of(context).showSnackBar(
-      SnackBar(
-        content: Text('Opening $modalType modal...'),
-        backgroundColor: AppTheme.primaryColor,
-        duration: const Duration(seconds: 2),
-      ),
-    );
+    if (modalType == 'addReptileModal') {
+      showDialog(
+        context: context,
+        barrierDismissible: true,
+        builder: (context) => const AddReptileModal(),
+      );
+    } else {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(
+          content: Text('Opening $modalType modal...'),
+          backgroundColor: AppTheme.primaryColor,
+          duration: const Duration(seconds: 2),
+        ),
+      );
+    }
   }
 } 

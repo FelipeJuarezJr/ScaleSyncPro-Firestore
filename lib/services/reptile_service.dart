@@ -33,6 +33,15 @@ class ReptileService {
     }
   }
 
+  // Watch all reptiles in real-time
+  Stream<List<Reptile>> watchReptiles() {
+    return _reptilesCollection
+        .snapshots()
+        .map((snapshot) => snapshot.docs
+            .map((doc) => Reptile.fromMap(doc.data(), doc.id))
+            .toList());
+  }
+
   // Get a specific reptile by ID
   Future<Reptile?> getReptile(String id) async {
     try {

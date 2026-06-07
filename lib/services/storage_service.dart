@@ -1,22 +1,16 @@
 import 'dart:typed_data';
 import 'package:firebase_storage/firebase_storage.dart';
-import 'package:firebase_core/firebase_core.dart';
 import 'package:firebase_auth/firebase_auth.dart';
-import '../config/firebase_config.dart';
 
 /// StorageService uses ScaleSyncPro Firebase for all file storage operations
 /// Gets user ID from ReptiGram Firebase Auth (default app)
 /// Stores all files in ScaleSyncPro Firebase Storage
 class StorageService {
-  // Use ScaleSyncPro Firebase for Storage operations
-  FirebaseStorage get _storage => FirebaseStorage.instanceFor(
-    app: Firebase.app(FirebaseConfig.scaleSyncProAppName),
-  );
+  // Use default FirebaseStorage instance
+  FirebaseStorage get _storage => FirebaseStorage.instance;
   
-  // Get user ID from ReptiGram Auth (default app)
-  String get _userId => FirebaseAuth.instanceFor(
-    app: Firebase.app(FirebaseConfig.defaultAppName),
-  ).currentUser?.uid ?? '';
+  // Get user ID from default Auth instance
+  String get _userId => FirebaseAuth.instance.currentUser?.uid ?? '';
 
   /// Upload a file to user's storage folder
   /// [path] is the relative path from the user's folder (e.g., 'reptiles/image.jpg')
