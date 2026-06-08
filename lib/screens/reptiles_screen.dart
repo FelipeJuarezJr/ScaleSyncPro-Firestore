@@ -4,6 +4,8 @@ import '../models/reptile.dart';
 import '../services/reptile_service.dart';
 import '../widgets/add_reptile_modal.dart';
 import '../utils/theme.dart';
+import 'animal_detail_screen.dart';
+
 
 class ReptilesScreen extends StatefulWidget {
   const ReptilesScreen({super.key});
@@ -472,17 +474,28 @@ class _ReptilesScreenState extends State<ReptilesScreen> {
       );
     }
 
-    return Card(
-      color: cardColor,
-      clipBehavior: Clip.antiAlias,
-      shape: RoundedRectangleBorder(
-        borderRadius: BorderRadius.circular(AppTheme.borderRadiusLg),
-        side: BorderSide(
-          color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor,
-          width: 1,
+    return InkWell(
+      onTap: () {
+        Navigator.push(
+          context,
+          MaterialPageRoute(
+            builder: (_) => AnimalDetailScreen(reptile: reptile),
+          ),
+        );
+      },
+      borderRadius: BorderRadius.circular(AppTheme.borderRadiusLg),
+      child: Card(
+        color: cardColor,
+        clipBehavior: Clip.antiAlias,
+        shape: RoundedRectangleBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadiusLg),
+          side: BorderSide(
+            color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor,
+            width: 1,
+          ),
         ),
+        child: cardBody,
       ),
-      child: cardBody,
     );
   }
 

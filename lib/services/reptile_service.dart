@@ -1,6 +1,9 @@
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/reptile.dart';
+import '../models/feeding_log.dart';
+import '../models/activity_log.dart';
+import '../models/animal_note.dart';
 
 /// ReptileService — all data operations through the ScaleSyncPro Firebase project.
 class ReptileService {
@@ -182,4 +185,123 @@ class ReptileService {
       throw Exception('Failed to get reptiles needing attention: $e');
     }
   }
-} 
+
+  // ─── Sub-collection helpers ──────────────────────────────────────────────
+
+  // Feeding Logs
+  CollectionReference<Map<String, dynamic>> _feedingLogsRef(String reptileId) =>
+      _reptilesCollection.doc(reptileId).collection('feeding_logs');
+
+  Stream<List<FeedingLog>> watchFeedingLogs(String reptileId) {
+    return _feedingLogsRef(reptileId)
+        .orderBy('feedingDate', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) => FeedingLog.fromMap(d.data(), d.id)).toList());
+  }
+
+  Future<void> addFeedingLog(String reptileId, FeedingLog log) async {
+    try {
+      await _feedingLogsRef(reptileId).add(log.toMap());
+      // Update lastFeeding on the parent reptile
+      await _reptilesCollection.doc(reptileId).update({
+        'lastFeeding': Timestamp.fromDate(log.feedingDate),
+        'updatedAt': Timestamp.fromDate(DateTime.now()),
+      });
+      // Log to activity history
+      await addActivityLog(reptileId, ActivityLog(
+        event: 'Feeding logged',
+        detail: log.summary,
+        type: 'feeding',
+        logDate: log.feedingDate,
+      ));
+    } catch (e) {
+      throw Exception('Failed to add feeding log: $e');
+    }
+  }
+
+  Future<void> deleteFeedingLog(String reptileId, String logId) async {
+    await _feedingLogsRef(reptileId).doc(logId).delete();
+  }
+
+  // Activity / History Logs
+  CollectionReference<Map<String, dynamic>> _activityLogsRef(String reptileId) =>
+      _reptilesCollection.doc(reptileId).collection('activity_logs');
+
+  Stream<List<ActivityLog>> watchActivityLogs(String reptileId) {
+    return _activityLogsRef(reptileId)
+        .orderBy('logDate', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) => ActivityLog.fromMap(d.data(), d.id)).toList());
+  }
+
+  Future<void> addActivityLog(String reptileId, ActivityLog log) async {
+    try {
+      await _activityLogsRef(reptileId).add(log.toMap());
+    } catch (e) {
+      throw Exception('Failed to add activity log: $e');
+    }
+  }
+
+  // Notes
+  CollectionReference<Map<String, dynamic>> _notesRef(String reptileId) =>
+      _reptilesCollection.doc(reptileId).collection('notes');
+
+  Stream<List<AnimalNote>> watchNotes(String reptileId) {
+    return _notesRef(reptileId)
+        .orderBy('createdAt', descending: true)
+        .snapshots()
+        .map((s) => s.docs.map((d) => AnimalNote.fromMap(d.data(), d.id)).toList());
+  }
+
+  Future<void> addNote(String reptileId, AnimalNote note) async {
+    try {
+      await _notesRef(reptileId).add(note.toMap());
+    } catch (e) {
+      throw Exception('Failed to add note: $e');
+    }
+  }
+
+  Future<void> deleteNote(String reptileId, String noteId) async {
+    await _notesRef(reptileId).doc(noteId).delete();
+  }
+
+  /// Updates a reptile and auto-logs weight/length changes to activity history.
+  Future<void> updateReptileWithHistoryLog(String reptileId, Reptile oldReptile, Reptile newReptile) async {
+    try {
+      final now = DateTime.now();
+      final logs = <ActivityLog>[];
+
+      final oldWeight = oldReptile.measurements['weight'];
+      final newWeight = newReptile.measurements['weight'];
+      final weightUnit = newReptile.measurements['weightUnit'] ?? 'gr';
+      if (oldWeight != null && newWeight != null && oldWeight != newWeight) {
+        logs.add(ActivityLog(
+          event: 'Weight changed',
+          detail: '$oldWeight $weightUnit → $newWeight $weightUnit',
+          type: 'weight_change',
+          logDate: now,
+        ));
+      }
+
+      final oldLength = oldReptile.measurements['length'];
+      final newLength = newReptile.measurements['length'];
+      final lengthUnit = newReptile.measurements['lengthUnit'] ?? 'cm';
+      if (oldLength != null && newLength != null && oldLength != newLength) {
+        logs.add(ActivityLog(
+          event: 'Length changed',
+          detail: '$oldLength $lengthUnit → $newLength $lengthUnit',
+          type: 'length_change',
+          logDate: now,
+        ));
+      }
+
+      await _reptilesCollection.doc(reptileId).update(newReptile.copyWith(updatedAt: now).toMap());
+
+      for (final log in logs) {
+        await addActivityLog(reptileId, log);
+      }
+    } catch (e) {
+      throw Exception('Failed to update reptile: $e');
+    }
+  }
+}
