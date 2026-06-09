@@ -1,5 +1,6 @@
 import 'package:flutter/material.dart';
 import 'package:provider/provider.dart';
+import '../../screens/main_app_screen.dart';
 import '../../services/auth_service.dart';
 import '../../services/theme_service.dart';
 import '../../utils/theme.dart';
@@ -360,6 +361,14 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
         _emailController.text.trim(),
         _passwordController.text,
       );
+
+      // Navigate directly to dashboard on successful registration
+      if (mounted) {
+        Navigator.of(context).pushAndRemoveUntil(
+          MaterialPageRoute(builder: (_) => const MainAppScreen()),
+          (route) => false,
+        );
+      }
     } catch (e) {
       if (mounted) {
         ScaffoldMessenger.of(context).showSnackBar(
@@ -368,9 +377,6 @@ class _RegisterScreenState extends State<RegisterScreen> with TickerProviderStat
             backgroundColor: AppTheme.dangerColor,
           ),
         );
-      }
-    } finally {
-      if (mounted) {
         setState(() {
           _isLoading = false;
         });

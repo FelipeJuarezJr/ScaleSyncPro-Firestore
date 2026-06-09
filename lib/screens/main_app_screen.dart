@@ -4,6 +4,7 @@ import 'package:provider/provider.dart';
 import '../services/auth_service.dart';
 import '../services/theme_service.dart';
 import '../utils/theme.dart';
+import 'auth/login_screen.dart';
 import 'dashboard_screen.dart';
 import 'reptiles_screen.dart';
 import 'breeding_screen.dart';
@@ -485,13 +486,19 @@ class MainAppBar extends StatelessWidget implements PreferredSizeWidget {
           ),
         ),
       ],
-      onSelected: (value) {
+      onSelected: (value) async {
         switch (value) {
           case 'theme':
             themeService.toggleTheme();
             break;
           case 'logout':
-            authService.signOut();
+            await authService.signOut();
+            if (context.mounted) {
+              Navigator.of(context).pushAndRemoveUntil(
+                MaterialPageRoute(builder: (_) => const LoginScreen()),
+                (route) => false,
+              );
+            }
             break;
           case 'profile':
           case 'settings':
@@ -618,13 +625,19 @@ class _UserMenuButtonState extends State<_UserMenuButton> {
             ),
           ),
         ],
-        onSelected: (value) {
+        onSelected: (value) async {
           switch (value) {
             case 'theme':
               widget.themeService.toggleTheme();
               break;
             case 'logout':
-              widget.authService.signOut();
+              await widget.authService.signOut();
+              if (context.mounted) {
+                Navigator.of(context).pushAndRemoveUntil(
+                  MaterialPageRoute(builder: (_) => const LoginScreen()),
+                  (route) => false,
+                );
+              }
               break;
             case 'profile':
             case 'settings':
