@@ -58,6 +58,9 @@ class ClutchInfo {
   final String id;
   final String? pairId;       // Links directly back to the active pairing
   final String damId;
+  final String? damName;      // Display name for the dam
+  final String? sireName;     // Display name for the sire
+  final String? species;      // e.g., "Ball Python", "Boa Constrictor"
   final String clutchNumber;  // e.g., "Clutch 2026-#05"
   final DateTime layDate;
   final DateTime? estimatedHatchDate;
@@ -71,6 +74,9 @@ class ClutchInfo {
     required this.id,
     this.pairId,
     required this.damId,
+    this.damName,
+    this.sireName,
+    this.species,
     required this.clutchNumber,
     required this.layDate,
     this.estimatedHatchDate,
@@ -85,6 +91,9 @@ class ClutchInfo {
     return {
       'pairId': pairId,
       'damId': damId,
+      'damName': damName,
+      'sireName': sireName,
+      'species': species,
       'clutchNumber': clutchNumber,
       'layDate': Timestamp.fromDate(layDate),
       'estimatedHatchDate': estimatedHatchDate != null ? Timestamp.fromDate(estimatedHatchDate!) : null,
@@ -101,6 +110,9 @@ class ClutchInfo {
       id: id,
       pairId: data['pairId'],
       damId: data['damId'] ?? '',
+      damName: data['damName'],
+      sireName: data['sireName'],
+      species: data['species'],
       clutchNumber: data['clutchNumber'] ?? '',
       layDate: (data['layDate'] as Timestamp?)?.toDate() ?? DateTime.now(),
       estimatedHatchDate: (data['estimatedHatchDate'] as Timestamp?)?.toDate(),

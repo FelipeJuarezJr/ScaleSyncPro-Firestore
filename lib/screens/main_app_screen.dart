@@ -91,7 +91,7 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   Widget _buildMobileLayout() {
     return SafeArea(
-      bottom: false, // Let individual screens handle bottom safe area
+      bottom: true, // Respect home indicator on Android gesture-nav & iPhone
       child: Column(
         children: [
           // Top Navigation Bar (matching HTML exactly)

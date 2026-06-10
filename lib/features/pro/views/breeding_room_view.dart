@@ -11,6 +11,7 @@ import '../models/breeding_model.dart';
 import '../../../models/activity_log.dart';
 import '../../../models/animal_note.dart';
 import '../../../screens/breeding_pair_detail_screen.dart';
+import '../../../widgets/add_breeding_modal.dart';
 
 
 // ==========================================
@@ -244,28 +245,6 @@ class BreedingRoomView extends ConsumerWidget {
               _buildHeaderSection(context),
               const SizedBox(height: 24),
 
-              // Quick Actions & Quick-Log trigger
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  Text(
-                    'Operational Summary',
-                    style: theme.textTheme.headlineMedium?.copyWith(
-                      fontWeight: FontWeight.bold,
-                    ),
-                  ),
-                  ElevatedButton.icon(
-                    onPressed: () => _showAddPairingDialog(context, ref),
-                    icon: const Icon(Icons.add_circle_outline),
-                    label: const Text('Log New Pairing'),
-                    style: ElevatedButton.styleFrom(
-                      elevation: 0,
-                    ),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 16),
-
               // Incubator Clutch Overview
               Text(
                 'Incubator Clutches',
@@ -289,13 +268,29 @@ class BreedingRoomView extends ConsumerWidget {
               ),
               const SizedBox(height: 24),
 
-              // Active Pairings HUD
-              Text(
-                'Active Pairings HUD',
-                style: theme.textTheme.titleMedium?.copyWith(
-                  fontWeight: FontWeight.bold,
-                  color: theme.colorScheme.primary,
-                ),
+              // Active Pairings HUD + Log New Pairing button
+              Row(
+                mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                children: [
+                  Text(
+                    'Active Pairings HUD',
+                    style: theme.textTheme.titleMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: theme.colorScheme.primary,
+                    ),
+                  ),
+                  ElevatedButton.icon(
+                    onPressed: () => _openAddBreedingModal(context, ref),
+                    icon: const Icon(Icons.add_circle_outline, size: 16),
+                    label: const Text('Log New Pairing'),
+                    style: ElevatedButton.styleFrom(
+                      elevation: 0,
+                      padding: const EdgeInsets.symmetric(
+                          horizontal: 14, vertical: 8),
+                      textStyle: const TextStyle(fontSize: 12),
+                    ),
+                  ),
+                ],
               ),
               const SizedBox(height: 8),
               pairingsAsync.when(
@@ -405,8 +400,68 @@ class BreedingRoomView extends ConsumerWidget {
       height: 185,
       child: ListView.builder(
         scrollDirection: Axis.horizontal,
-        itemCount: clutches.length,
+        itemCount: clutches.length + 1,
         itemBuilder: (context, index) {
+          // ── Trailing "+" card ──
+          if (index == clutches.length) {
+            return GestureDetector(
+              onTap: () => _showAddClutchDialog(context, ref),
+              child: Container(
+                width: 160,
+                margin: const EdgeInsets.only(right: 12),
+                decoration: BoxDecoration(
+                  color: Colors.transparent,
+                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusLg),
+                  border: Border.all(
+                    color: AppTheme.primaryColor.withOpacity(0.35),
+                    width: 1.5,
+                    // Dart doesn't have native dashed borders, so we use
+                    // a slightly lighter stroke + icon to suggest "add"
+                  ),
+                ),
+                child: Column(
+                  mainAxisAlignment: MainAxisAlignment.center,
+                  children: [
+                    Container(
+                      width: 44,
+                      height: 44,
+                      decoration: BoxDecoration(
+                        color: AppTheme.primaryColor.withOpacity(0.1),
+                        shape: BoxShape.circle,
+                        border: Border.all(
+                          color: AppTheme.primaryColor.withOpacity(0.4),
+                        ),
+                      ),
+                      child: const Icon(
+                        Icons.add,
+                        color: AppTheme.primaryColor,
+                        size: 22,
+                      ),
+                    ),
+                    const SizedBox(height: 10),
+                    const Text(
+                      '+ Add Clutch',
+                      style: TextStyle(
+                        color: AppTheme.primaryColor,
+                        fontSize: 12,
+                        fontWeight: FontWeight.bold,
+                        letterSpacing: 0.5,
+                      ),
+                    ),
+                    const SizedBox(height: 4),
+                    const Text(
+                      'Log a new clutch',
+                      style: TextStyle(
+                        color: AppTheme.textLight,
+                        fontSize: 10,
+                      ),
+                    ),
+                  ],
+                ),
+              ),
+            );
+          }
+
           final clutch = clutches[index];
           
           // Calculate Incubation Countdown
@@ -420,35 +475,69 @@ class BreedingRoomView extends ConsumerWidget {
           final double progress = totalDays > 0 
               ? (daysPassed / totalDays).clamp(0.0, 1.0) 
               : 0.0;
-          
-          final displayRemaining = remainingDays > 0 ? '$remainingDays days left' : 'Hatching expected';
 
           return Container(
-            width: 280,
+            width: 290,
             margin: const EdgeInsets.only(right: 12),
             child: Card(
-              color: theme.brightness == Brightness.dark 
-                  ? theme.colorScheme.surface 
+              color: theme.brightness == Brightness.dark
+                  ? AppTheme.bgPrimary
                   : Colors.white,
+              shape: RoundedRectangleBorder(
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusLg),
+                side: BorderSide(
+                  color: AppTheme.primaryColor.withOpacity(0.18),
+                ),
+              ),
               child: Padding(
                 padding: const EdgeInsets.all(12.0),
                 child: Column(
                   crossAxisAlignment: CrossAxisAlignment.start,
                   children: [
+                    // ── Header: Clutch ID + menu ──
                     Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      crossAxisAlignment: CrossAxisAlignment.start,
                       children: [
+                        Container(
+                          padding: const EdgeInsets.all(7),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
+                          ),
+                          child: const Icon(Icons.egg_outlined,
+                              size: 16, color: AppTheme.primaryColor),
+                        ),
+                        const SizedBox(width: 8),
                         Expanded(
-                          child: Text(
-                            clutch.clutchNumber,
-                            style: theme.textTheme.titleMedium?.copyWith(
-                              fontWeight: FontWeight.bold,
-                            ),
-                            overflow: TextOverflow.ellipsis,
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(
+                                clutch.clutchNumber,
+                                style: theme.textTheme.titleMedium?.copyWith(
+                                  fontWeight: FontWeight.bold,
+                                  color: theme.brightness == Brightness.dark
+                                      ? AppTheme.textPrimary
+                                      : AppTheme.lightTextPrimary,
+                                ),
+                                overflow: TextOverflow.ellipsis,
+                              ),
+                              if (clutch.species != null && clutch.species!.isNotEmpty)
+                                Text(
+                                  clutch.species!,
+                                  style: const TextStyle(
+                                    fontSize: 11,
+                                    color: AppTheme.primaryColor,
+                                    fontWeight: FontWeight.w500,
+                                  ),
+                                ),
+                            ],
                           ),
                         ),
                         PopupMenuButton<String>(
-                          icon: const Icon(Icons.more_vert, size: 18),
+                          icon: const Icon(Icons.more_vert, size: 16,
+                              color: AppTheme.textLight),
+                          padding: EdgeInsets.zero,
                           onSelected: (val) {
                             if (val == 'delete') {
                               ref.read(breedingServiceProvider).removeClutch(clutch.id);
@@ -457,26 +546,52 @@ class BreedingRoomView extends ConsumerWidget {
                           itemBuilder: (context) => [
                             const PopupMenuItem(
                               value: 'delete',
-                              child: Text('Delete Clutch', style: TextStyle(color: Colors.red)),
+                              child: Text('Delete Clutch',
+                                  style: TextStyle(color: Colors.red)),
                             ),
                           ],
                         ),
                       ],
                     ),
-                    const Divider(height: 12),
+
+                    // ── Sire × Dam chip row ──
+                    if (clutch.damName != null || clutch.sireName != null) ...[
+                      const SizedBox(height: 6),
+                      Row(
+                        children: [
+                          if (clutch.damName != null)
+                            _clutchChip(Icons.female, clutch.damName!, Colors.pinkAccent),
+                          if (clutch.damName != null && clutch.sireName != null)
+                            const Padding(
+                              padding: EdgeInsets.symmetric(horizontal: 4),
+                              child: Text('×',
+                                  style: TextStyle(
+                                      color: AppTheme.textLight, fontSize: 11)),
+                            ),
+                          if (clutch.sireName != null)
+                            _clutchChip(Icons.male, clutch.sireName!, Colors.blueAccent),
+                        ],
+                      ),
+                    ],
+
+                    const Divider(height: 14),
+
+                    // ── Stats row: eggs + temp ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Text('EGGS STATUS', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                            Text('EGGS',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontSize: 9, letterSpacing: 0.6)),
                             const SizedBox(height: 2),
                             Text(
-                              '${clutch.goodEggs} Fertile / ${clutch.slugs} Slugs',
+                              '${clutch.goodEggs}/${clutch.totalEggs}',
                               style: theme.textTheme.bodyMedium?.copyWith(
                                 fontWeight: FontWeight.bold,
-                                color: theme.colorScheme.secondary,
+                                color: AppTheme.primaryColor,
                               ),
                             ),
                           ],
@@ -484,7 +599,9 @@ class BreedingRoomView extends ConsumerWidget {
                         Column(
                           crossAxisAlignment: CrossAxisAlignment.end,
                           children: [
-                            Text('TEMP', style: theme.textTheme.bodySmall?.copyWith(fontSize: 10)),
+                            Text('TEMP',
+                                style: theme.textTheme.bodySmall
+                                    ?.copyWith(fontSize: 9, letterSpacing: 0.6)),
                             const SizedBox(height: 2),
                             Text(
                               '${clutch.incubatorTemp}°F',
@@ -494,23 +611,52 @@ class BreedingRoomView extends ConsumerWidget {
                             ),
                           ],
                         ),
+                        // Countdown badge
+                        Container(
+                          padding: const EdgeInsets.symmetric(
+                              horizontal: 8, vertical: 4),
+                          decoration: BoxDecoration(
+                            color: remainingDays <= 7
+                                ? AppTheme.warningColor.withOpacity(0.15)
+                                : AppTheme.primaryColor.withOpacity(0.1),
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.borderRadiusSm),
+                            border: Border.all(
+                              color: remainingDays <= 7
+                                  ? AppTheme.warningColor.withOpacity(0.4)
+                                  : AppTheme.primaryColor.withOpacity(0.3),
+                            ),
+                          ),
+                          child: Text(
+                            remainingDays > 0
+                                ? '$remainingDays d left'
+                                : 'Hatching!',
+                            style: TextStyle(
+                              fontSize: 10,
+                              fontWeight: FontWeight.bold,
+                              color: remainingDays <= 7
+                                  ? AppTheme.warningColor
+                                  : AppTheme.primaryColor,
+                            ),
+                          ),
+                        ),
                       ],
                     ),
-                    const Spacer(),
+
+                    const SizedBox(height: 10),
+
+                    // ── Progress bar ──
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceBetween,
                       children: [
-                        Text(
-                          'Incubation Timeline',
-                          style: theme.textTheme.bodySmall,
-                        ),
-                        Text(
-                          displayRemaining,
-                          style: theme.textTheme.bodySmall?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: theme.colorScheme.primary,
-                          ),
-                        ),
+                        Text('Day $daysPassed of $totalDays',
+                            style: theme.textTheme.bodySmall
+                                ?.copyWith(fontSize: 10)),
+                        Text('${(progress * 100).toStringAsFixed(0)}%',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                                fontSize: 10,
+                                fontWeight: FontWeight.bold,
+                                color: AppTheme.primaryColor)),
                       ],
                     ),
                     const SizedBox(height: 4),
@@ -518,8 +664,12 @@ class BreedingRoomView extends ConsumerWidget {
                       borderRadius: BorderRadius.circular(4),
                       child: LinearProgressIndicator(
                         value: progress,
-                        backgroundColor: theme.colorScheme.primary.withOpacity(0.15),
-                        valueColor: AlwaysStoppedAnimation<Color>(theme.colorScheme.primary),
+                        backgroundColor: AppTheme.primaryColor.withOpacity(0.12),
+                        valueColor: AlwaysStoppedAnimation<Color>(
+                          remainingDays <= 7
+                              ? AppTheme.warningColor
+                              : AppTheme.primaryColor,
+                        ),
                         minHeight: 6,
                       ),
                     ),
@@ -529,6 +679,34 @@ class BreedingRoomView extends ConsumerWidget {
             ),
           );
         },
+      ),
+    );
+  }
+
+
+  // Compact name chip for dam/sire in clutch cards
+  Widget _clutchChip(IconData icon, String name, Color color) {
+    return Container(
+      padding: const EdgeInsets.symmetric(horizontal: 6, vertical: 2),
+      decoration: BoxDecoration(
+        color: color.withOpacity(0.1),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
+        border: Border.all(color: color.withOpacity(0.3)),
+      ),
+      child: Row(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(icon, size: 10, color: color),
+          const SizedBox(width: 3),
+          Text(
+            name,
+            style: TextStyle(
+              fontSize: 10,
+              color: color,
+              fontWeight: FontWeight.w500,
+            ),
+          ),
+        ],
       ),
     );
   }
@@ -564,7 +742,7 @@ class BreedingRoomView extends ConsumerWidget {
                 ),
                 const SizedBox(height: 16),
                 ElevatedButton.icon(
-                  onPressed: () => _showAddPairingDialog(context, ref),
+                  onPressed: () => _openAddBreedingModal(context, ref),
                   icon: const Icon(Icons.add),
                   label: const Text('Log First Pairing'),
                 ),
@@ -750,315 +928,725 @@ class BreedingRoomView extends ConsumerWidget {
   }
 
   // ----------------------------------------------------
-  // REGISTER NEW BREEDING PAIR DIALOG
+  // OPEN FULL BREEDING MODAL (Add Breeding Modal)
   // ----------------------------------------------------
-  void _showAddPairingDialog(BuildContext context, WidgetRef ref) {
-    final reptilesState = ref.read(reptilesProvider);
-    final theme = Theme.of(context);
-
-    reptilesState.when(
-      data: (reptiles) {
-        final males = reptiles.where((r) => r.gender.toLowerCase() == 'male').toList();
-        final females = reptiles.where((r) => r.gender.toLowerCase() == 'female').toList();
-
-        if (males.isEmpty || females.isEmpty) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('Insufficient Specimens'),
-              content: const Text(
-                'You must have at least one Male and one Female reptile in your collection to plan facility pairings.'
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
-                ),
-              ],
-            ),
-          );
-          return;
-        }
-
-        Reptile? selectedSire = males.first;
-        Reptile? selectedDam = females.first;
-        final notesController = TextEditingController();
-
-        showDialog(
-          context: context,
-          builder: (context) {
-            return StatefulBuilder(
-              builder: (context, setState) {
-                return AlertDialog(
-                  title: const Text('Log New Breeding Pairing'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
-                      children: [
-                        // Sire Selection
-                        DropdownButtonFormField<Reptile>(
-                          value: selectedSire,
-                          decoration: const InputDecoration(labelText: 'Select Sire (Male)'),
-                          items: males.map((m) {
-                            return DropdownMenuItem(
-                              value: m,
-                              child: Text('${m.name} (${m.morph ?? "Normal"})'),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              selectedSire = val;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-                        
-                        // Dam Selection
-                        DropdownButtonFormField<Reptile>(
-                          value: selectedDam,
-                          decoration: const InputDecoration(labelText: 'Select Dam (Female)'),
-                          items: females.map((f) {
-                            return DropdownMenuItem(
-                              value: f,
-                              child: Text('${f.name} (${f.morph ?? "Normal"})'),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              selectedDam = val;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 16),
-
-                        // Notes Field
-                        TextField(
-                          controller: notesController,
-                          decoration: const InputDecoration(
-                            labelText: 'Breeding Notes (Optional)',
-                            hintText: 'e.g. Visual locks, ambient weights...',
-                          ),
-                          maxLines: 2,
-                        ),
-                      ],
-                    ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
-                    ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (selectedSire == null || selectedDam == null) return;
-                        
-                        final pair = BreedingPair(
-                          id: '',
-                          sireId: selectedSire!.id ?? '',
-                          sireName: selectedSire!.name,
-                          damId: selectedDam!.id ?? '',
-                          damName: selectedDam!.name,
-                          pairedDate: DateTime.now(),
-                          status: 'Active',
-                          copulationDates: [],
-                          notes: notesController.text,
-                        );
-
-                        try {
-                          await ref.read(breedingServiceProvider).addBreedingPair(pair);
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Breeding pair successfully logged!'),
-                              backgroundColor: Colors.green,
-                            ),
-                          );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error saving pairing: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text('Register Setup'),
-                    ),
-                  ],
-                );
-              },
-            );
-          },
-        );
-      },
-      loading: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Still loading reptiles database...')),
-      ),
-      error: (err, stack) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error loading collection: $err')),
-      ),
+  void _openAddBreedingModal(BuildContext context, WidgetRef ref) async {
+    final result = await showDialog<bool>(
+      context: context,
+      barrierDismissible: false,
+      builder: (context) => const AddBreedingModal(),
     );
+
+    if (result == true) {
+      // Refresh providers so the new pairing appears immediately
+      ref.invalidate(activePairingsProvider);
+      ref.invalidate(activeClutchesProvider);
+    }
   }
 
   // ----------------------------------------------------
-  // REGISTER NEW INCUBATOR CLUTCH DIALOG
+  // REGISTER NEW INCUBATOR CLUTCH — STYLED MODAL SHEET
   // ----------------------------------------------------
   void _showAddClutchDialog(BuildContext context, WidgetRef ref) {
-    final reptilesState = ref.read(reptilesProvider);
+    final formKey = GlobalKey<FormState>();
+    final clutchIdCtrl = TextEditingController(text: 'Clutch ${DateTime.now().year}-#01');
+    final speciesCtrl = TextEditingController();
+    final damCtrl = TextEditingController();
+    final sireCtrl = TextEditingController();
+    final totalEggsCtrl = TextEditingController(text: '8');
+    final tempCtrl = TextEditingController(text: '89.5');
 
-    reptilesState.when(
-      data: (reptiles) {
-        final females = reptiles.where((r) => r.gender.toLowerCase() == 'female').toList();
+    // Pull unique dam/sire names from active pairings for quick-fill chips
+    final pairings = ref.read(activePairingsProvider).value ?? [];
+    final damSuggestions = pairings.map((p) => p.damName).toSet().toList();
+    final sireSuggestions = pairings.map((p) => p.sireName).toSet().toList();
 
-        if (females.isEmpty) {
-          showDialog(
-            context: context,
-            builder: (context) => AlertDialog(
-              title: const Text('No Dams Available'),
-              content: const Text(
-                'You need to register at least one Female reptile in your collection to map clutch laying data.'
-              ),
-              actions: [
-                TextButton(
-                  onPressed: () => Navigator.of(context).pop(),
-                  child: const Text('OK'),
+    // Track which chip is selected per field (for highlight feedback)
+    String? selectedDam;
+    String? selectedSire;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (sheetCtx, setSheetState) {
+        return Padding(
+          padding: EdgeInsets.only(bottom: MediaQuery.of(sheetCtx).viewInsets.bottom),
+          child: Container(
+            decoration: BoxDecoration(
+              color: AppTheme.bgSecondary,
+              borderRadius: const BorderRadius.vertical(top: Radius.circular(20)),
+              border: Border.all(color: AppTheme.primaryColor.withOpacity(0.25)),
+              boxShadow: [
+                BoxShadow(
+                  color: AppTheme.primaryColor.withOpacity(0.08),
+                  blurRadius: 32,
+                  offset: const Offset(0, -8),
                 ),
               ],
             ),
-          );
-          return;
-        }
+            child: SingleChildScrollView(
+              padding: const EdgeInsets.fromLTRB(24, 8, 24, 32),
+              child: Form(
+                key: formKey,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.stretch,
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag handle
+                    Center(
+                      child: Container(
+                        width: 40,
+                        height: 4,
+                        margin: const EdgeInsets.only(bottom: 20, top: 10),
+                        decoration: BoxDecoration(
+                          color: AppTheme.borderColor,
+                          borderRadius: BorderRadius.circular(2),
+                        ),
+                      ),
+                    ),
 
-        Reptile? selectedDam = females.first;
-        final clutchNumberController = TextEditingController(text: 'Clutch ${DateTime.now().year}-#01');
-        final goodEggsController = TextEditingController(text: '8');
-        final slugsController = TextEditingController(text: '0');
-        final tempController = TextEditingController(text: '89.5');
-
-        showDialog(
-          context: context,
-          builder: (context) {
-            return StatefulBuilder(
-              builder: (context, setState) {
-                return AlertDialog(
-                  title: const Text('Log Incubator Clutch'),
-                  content: SingleChildScrollView(
-                    child: Column(
-                      mainAxisSize: MainAxisSize.min,
+                    // Title row
+                    Row(
                       children: [
-                        // Clutch Reference
-                        TextField(
-                          controller: clutchNumberController,
-                          decoration: const InputDecoration(labelText: 'Clutch ID / Number'),
+                        Container(
+                          padding: const EdgeInsets.all(8),
+                          decoration: BoxDecoration(
+                            color: AppTheme.primaryColor.withOpacity(0.12),
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                            border: Border.all(color: AppTheme.primaryColor.withOpacity(0.3)),
+                          ),
+                          child: const Icon(Icons.egg_outlined, color: AppTheme.primaryColor, size: 20),
                         ),
-                        const SizedBox(height: 12),
-
-                        // Dam selection
-                        DropdownButtonFormField<Reptile>(
-                          value: selectedDam,
-                          decoration: const InputDecoration(labelText: 'Select Dam (Mother)'),
-                          items: females.map((f) {
-                            return DropdownMenuItem(
-                              value: f,
-                              child: Text(f.name),
-                            );
-                          }).toList(),
-                          onChanged: (val) {
-                            setState(() {
-                              selectedDam = val;
-                            });
-                          },
-                        ),
-                        const SizedBox(height: 12),
-
-                        Row(
+                        const SizedBox(width: 12),
+                        Column(
+                          crossAxisAlignment: CrossAxisAlignment.start,
                           children: [
-                            Expanded(
-                              child: TextField(
-                                controller: goodEggsController,
-                                decoration: const InputDecoration(labelText: 'Fertile Eggs'),
-                                keyboardType: TextInputType.number,
+                            Text(
+                              'LOG INCUBATOR CLUTCH',
+                              style: TextStyle(
+                                color: AppTheme.primaryColor,
+                                fontSize: 13,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
                               ),
                             ),
-                            const SizedBox(width: 12),
-                            Expanded(
-                              child: TextField(
-                                controller: slugsController,
-                                decoration: const InputDecoration(labelText: 'Slugs (Bad Eggs)'),
-                                keyboardType: TextInputType.number,
-                              ),
+                            Text(
+                              'Register a new clutch to the incubation system',
+                              style: TextStyle(color: AppTheme.textLight, fontSize: 11),
                             ),
                           ],
                         ),
-                        const SizedBox(height: 12),
+                      ],
+                    ),
+                    const SizedBox(height: 24),
 
-                        TextField(
-                          controller: tempController,
-                          decoration: const InputDecoration(labelText: 'Incubator Temperature (°F)'),
-                          keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                    // ── Row 1: Clutch ID + Species ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _modalField(
+                            controller: clutchIdCtrl,
+                            label: 'Clutch ID',
+                            hint: 'e.g. Clutch 2026-#01',
+                            icon: Icons.tag,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _modalField(
+                            controller: speciesCtrl,
+                            label: 'Species',
+                            hint: 'e.g. Ball Python',
+                            icon: Icons.pets,
+                            validator: (v) => (v == null || v.trim().isEmpty) ? 'Required' : null,
+                          ),
                         ),
                       ],
                     ),
-                  ),
-                  actions: [
-                    TextButton(
-                      onPressed: () => Navigator.of(context).pop(),
-                      child: const Text('Cancel'),
+                    const SizedBox(height: 14),
+
+                    // ── Row 2: Dam + Sire (searchable pickers) ──
+                    Row(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Expanded(
+                          child: _buildSelectorTile(
+                            label: 'Dam (Female)',
+                            value: selectedDam,
+                            icon: Icons.female,
+                            accentColor: Colors.pinkAccent,
+                            required: true,
+                            onTap: () async {
+                              final picked = await _showAnimalPickerSheet(
+                                context: sheetCtx,
+                                title: 'Select Dam',
+                                suggestions: damSuggestions,
+                                accentColor: Colors.pinkAccent,
+                                genderIcon: Icons.female,
+                              );
+                              if (picked != null) {
+                                setSheetState(() => selectedDam = picked);
+                                damCtrl.text = picked;
+                              }
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _buildSelectorTile(
+                            label: 'Sire (Male)',
+                            value: selectedSire,
+                            icon: Icons.male,
+                            accentColor: Colors.blueAccent,
+                            required: false,
+                            onTap: () async {
+                              final picked = await _showAnimalPickerSheet(
+                                context: sheetCtx,
+                                title: 'Select Sire',
+                                suggestions: sireSuggestions,
+                                accentColor: Colors.blueAccent,
+                                genderIcon: Icons.male,
+                              );
+                              if (picked != null) {
+                                setSheetState(() => selectedSire = picked);
+                                sireCtrl.text = picked;
+                              }
+                            },
+                          ),
+                        ),
+                      ],
                     ),
-                    ElevatedButton(
-                      onPressed: () async {
-                        if (selectedDam == null) return;
-                        
-                        final good = int.tryParse(goodEggsController.text) ?? 0;
-                        final bad = int.tryParse(slugsController.text) ?? 0;
-                        final temp = double.tryParse(tempController.text) ?? 0.0;
-                        final lay = DateTime.now();
+                    const SizedBox(height: 14),
 
-                        final clutch = ClutchInfo(
-                          id: '',
-                          damId: selectedDam!.id ?? '',
-                          clutchNumber: clutchNumberController.text,
-                          layDate: lay,
-                          estimatedHatchDate: lay.add(const Duration(days: 58)),
-                          totalEggs: good + bad,
-                          goodEggs: good,
-                          slugs: bad,
-                          incubatorTemp: temp,
-                          status: 'Incubating',
-                        );
+                    // ── Row 3: Total Eggs + Target Temp ──
+                    Row(
+                      children: [
+                        Expanded(
+                          child: _modalField(
+                            controller: totalEggsCtrl,
+                            label: 'Total Eggs',
+                            hint: '0',
+                            icon: Icons.egg,
+                            keyboardType: TextInputType.number,
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Required';
+                              if (int.tryParse(v.trim()) == null) return 'Must be a number';
+                              return null;
+                            },
+                          ),
+                        ),
+                        const SizedBox(width: 12),
+                        Expanded(
+                          child: _modalField(
+                            controller: tempCtrl,
+                            label: 'Target Temp (°F)',
+                            hint: '89.5',
+                            icon: Icons.thermostat,
+                            keyboardType: const TextInputType.numberWithOptions(decimal: true),
+                            validator: (v) {
+                              if (v == null || v.trim().isEmpty) return 'Required';
+                              if (double.tryParse(v.trim()) == null) return 'Invalid';
+                              return null;
+                            },
+                          ),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 28),
 
-                        try {
-                          await ref.read(breedingServiceProvider).addClutchInfo(clutch);
-                          Navigator.of(context).pop();
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            const SnackBar(
-                              content: Text('Clutch registered to incubator!'),
-                              backgroundColor: Colors.green,
-                            ),
+                    // ── Save Button ──
+                    SizedBox(
+                      height: 50,
+                      child: ElevatedButton.icon(
+                        style: ElevatedButton.styleFrom(
+                          backgroundColor: AppTheme.primaryColor,
+                          foregroundColor: Colors.black,
+                          shape: RoundedRectangleBorder(
+                            borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                          ),
+                        ),
+                        icon: const Icon(Icons.save_outlined, size: 18),
+                        label: const Text(
+                          'SAVE CLUTCH',
+                          style: TextStyle(fontWeight: FontWeight.bold, letterSpacing: 1),
+                        ),
+                        onPressed: () async {
+                          if (!(formKey.currentState?.validate() ?? false)) return;
+
+                          final eggs = int.tryParse(totalEggsCtrl.text.trim()) ?? 0;
+                          final temp = double.tryParse(tempCtrl.text.trim()) ?? 89.5;
+                          final lay = DateTime.now();
+
+                          final clutch = ClutchInfo(
+                            id: '',
+                            damId: damCtrl.text.trim(),
+                            damName: damCtrl.text.trim(),
+                            sireName: sireCtrl.text.trim().isEmpty ? null : sireCtrl.text.trim(),
+                            species: speciesCtrl.text.trim(),
+                            clutchNumber: clutchIdCtrl.text.trim(),
+                            layDate: lay,
+                            estimatedHatchDate: lay.add(const Duration(days: 58)),
+                            totalEggs: eggs,
+                            goodEggs: eggs,
+                            slugs: 0,
+                            incubatorTemp: temp,
+                            status: 'Incubating',
                           );
-                        } catch (e) {
-                          ScaffoldMessenger.of(context).showSnackBar(
-                            SnackBar(
-                              content: Text('Error registering: $e'),
-                              backgroundColor: Colors.red,
-                            ),
-                          );
-                        }
-                      },
-                      child: const Text('Register Clutch'),
+
+                          try {
+                            await ref.read(breedingServiceProvider).addClutchInfo(clutch);
+                            if (sheetCtx.mounted) Navigator.of(sheetCtx).pop();
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: const Text('Clutch registered to incubator!'),
+                                  backgroundColor: AppTheme.successColor,
+                                  behavior: SnackBarBehavior.floating,
+                                ),
+                              );
+                            }
+                          } catch (e) {
+                            if (context.mounted) {
+                              ScaffoldMessenger.of(context).showSnackBar(
+                                SnackBar(
+                                  content: Text('Error registering: $e'),
+                                  backgroundColor: AppTheme.dangerColor,
+                                ),
+                              );
+                            }
+                          }
+                        },
+                      ),
                     ),
                   ],
-                );
-              },
+                ),
+              ),
+            ),
+          ),
+        );
+          }, // StatefulBuilder builder
+        ); // StatefulBuilder
+      },
+    );
+  }
+
+  // ─────────────────────────────────────────────────────────────────────
+  // Searchable animal picker sheet
+  // ─────────────────────────────────────────────────────────────────────
+  Future<String?> _showAnimalPickerSheet({
+    required BuildContext context,
+    required String title,
+    required List<String> suggestions,
+    required Color accentColor,
+    required IconData genderIcon,
+  }) async {
+    final searchCtrl = TextEditingController();
+    final customCtrl = TextEditingController();
+
+    return await showModalBottomSheet<String>(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (pickerCtx) {
+        return StatefulBuilder(
+          builder: (pickerCtx, setPickerState) {
+            // Filter list based on search query
+            final query = searchCtrl.text.toLowerCase().trim();
+            final filtered = query.isEmpty
+                ? suggestions
+                : suggestions
+                    .where((n) => n.toLowerCase().contains(query))
+                    .toList();
+
+            return Padding(
+              padding: EdgeInsets.only(
+                  bottom: MediaQuery.of(pickerCtx).viewInsets.bottom),
+              child: Container(
+                constraints: BoxConstraints(
+                  maxHeight: MediaQuery.of(pickerCtx).size.height * 0.75,
+                ),
+                decoration: BoxDecoration(
+                  color: AppTheme.bgSecondary,
+                  borderRadius:
+                      const BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border.all(
+                      color: accentColor.withOpacity(0.25)),
+                  boxShadow: [
+                    BoxShadow(
+                      color: accentColor.withOpacity(0.06),
+                      blurRadius: 28,
+                      offset: const Offset(0, -8),
+                    ),
+                  ],
+                ),
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  children: [
+                    // Drag handle
+                    Container(
+                      width: 40,
+                      height: 4,
+                      margin: const EdgeInsets.only(top: 10, bottom: 14),
+                      decoration: BoxDecoration(
+                        color: AppTheme.borderColor,
+                        borderRadius: BorderRadius.circular(2),
+                      ),
+                    ),
+
+                    // Title
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 14),
+                      child: Row(
+                        children: [
+                          Icon(genderIcon, color: accentColor, size: 20),
+                          const SizedBox(width: 10),
+                          Text(
+                            title,
+                            style: TextStyle(
+                              color: accentColor,
+                              fontSize: 14,
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.8,
+                            ),
+                          ),
+                          const Spacer(),
+                          Text(
+                            '${filtered.length} of ${suggestions.length}',
+                            style: const TextStyle(
+                              fontSize: 11,
+                              color: AppTheme.textLight,
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+
+                    // Search bar
+                    Padding(
+                      padding: const EdgeInsets.fromLTRB(20, 0, 20, 12),
+                      child: TextField(
+                        controller: searchCtrl,
+                        autofocus: true,
+                        style: const TextStyle(
+                            color: AppTheme.textPrimary, fontSize: 14),
+                        onChanged: (_) => setPickerState(() {}),
+                        decoration: InputDecoration(
+                          hintText: 'Search by name…',
+                          hintStyle: const TextStyle(
+                              color: AppTheme.textLight, fontSize: 13),
+                          prefixIcon: const Icon(Icons.search,
+                              color: AppTheme.textLight, size: 18),
+                          suffixIcon: searchCtrl.text.isNotEmpty
+                              ? IconButton(
+                                  icon: const Icon(Icons.clear,
+                                      size: 16, color: AppTheme.textLight),
+                                  onPressed: () {
+                                    searchCtrl.clear();
+                                    setPickerState(() {});
+                                  },
+                                )
+                              : null,
+                          filled: true,
+                          fillColor: AppTheme.bgTertiary,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.borderRadius),
+                            borderSide:
+                                const BorderSide(color: AppTheme.borderColor),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius:
+                                BorderRadius.circular(AppTheme.borderRadius),
+                            borderSide:
+                                BorderSide(color: accentColor, width: 1.5),
+                          ),
+                        ),
+                      ),
+                    ),
+
+                    // Results list
+                    Flexible(
+                      child: filtered.isEmpty && suggestions.isNotEmpty
+                          ? Padding(
+                              padding: const EdgeInsets.all(32),
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(Icons.search_off,
+                                      color: AppTheme.textLight, size: 36),
+                                  const SizedBox(height: 10),
+                                  Text(
+                                    'No matches for "${searchCtrl.text}"',
+                                    style: const TextStyle(
+                                        color: AppTheme.textLight,
+                                        fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                ],
+                              ),
+                            )
+                          : suggestions.isEmpty
+                              ? Padding(
+                                  padding: const EdgeInsets.all(24),
+                                  child: Text(
+                                    'No active pairings found.\nUse the custom name field below.',
+                                    style: const TextStyle(
+                                        color: AppTheme.textLight,
+                                        fontSize: 13),
+                                    textAlign: TextAlign.center,
+                                  ),
+                                )
+                              : ListView.builder(
+                                  padding: const EdgeInsets.symmetric(
+                                      horizontal: 16),
+                                  itemCount: filtered.length,
+                                  itemBuilder: (_, i) {
+                                    final name = filtered[i];
+                                    return InkWell(
+                                      onTap: () =>
+                                          Navigator.of(pickerCtx).pop(name),
+                                      borderRadius: BorderRadius.circular(
+                                          AppTheme.borderRadius),
+                                      child: Container(
+                                        padding: const EdgeInsets.symmetric(
+                                            horizontal: 16, vertical: 13),
+                                        decoration: BoxDecoration(
+                                          border: Border(
+                                            bottom: BorderSide(
+                                              color: AppTheme.borderColor
+                                                  .withOpacity(0.5),
+                                              width: 0.5,
+                                            ),
+                                          ),
+                                        ),
+                                        child: Row(
+                                          children: [
+                                            Container(
+                                              width: 32,
+                                              height: 32,
+                                              decoration: BoxDecoration(
+                                                color: accentColor
+                                                    .withOpacity(0.1),
+                                                shape: BoxShape.circle,
+                                                border: Border.all(
+                                                  color: accentColor
+                                                      .withOpacity(0.3),
+                                                ),
+                                              ),
+                                              child: Icon(genderIcon,
+                                                  size: 14,
+                                                  color: accentColor),
+                                            ),
+                                            const SizedBox(width: 12),
+                                            Expanded(
+                                              child: Text(
+                                                name,
+                                                style: const TextStyle(
+                                                  color: AppTheme.textPrimary,
+                                                  fontSize: 14,
+                                                  fontWeight: FontWeight.w500,
+                                                ),
+                                              ),
+                                            ),
+                                            Icon(Icons.chevron_right,
+                                                size: 18,
+                                                color: AppTheme.textLight),
+                                          ],
+                                        ),
+                                      ),
+                                    );
+                                  },
+                                ),
+                    ),
+
+                    // ── Custom name entry ──
+                    Container(
+                      padding: const EdgeInsets.fromLTRB(20, 12, 20, 24),
+                      decoration: const BoxDecoration(
+                        border: Border(
+                          top: BorderSide(
+                              color: AppTheme.borderColor, width: 0.5),
+                        ),
+                      ),
+                      child: Row(
+                        children: [
+                          Expanded(
+                            child: TextField(
+                              controller: customCtrl,
+                              style: const TextStyle(
+                                  color: AppTheme.textPrimary, fontSize: 14),
+                              decoration: InputDecoration(
+                                hintText: 'Or enter a custom name…',
+                                hintStyle: const TextStyle(
+                                    color: AppTheme.textLight, fontSize: 12),
+                                filled: true,
+                                fillColor: AppTheme.bgTertiary,
+                                contentPadding: const EdgeInsets.symmetric(
+                                    horizontal: 14, vertical: 10),
+                                enabledBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppTheme.borderRadius),
+                                  borderSide: const BorderSide(
+                                      color: AppTheme.borderColor),
+                                ),
+                                focusedBorder: OutlineInputBorder(
+                                  borderRadius: BorderRadius.circular(
+                                      AppTheme.borderRadius),
+                                  borderSide: BorderSide(
+                                      color: accentColor, width: 1.5),
+                                ),
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          ElevatedButton(
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: accentColor,
+                              foregroundColor: Colors.white,
+                              padding: const EdgeInsets.symmetric(
+                                  horizontal: 16, vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(
+                                    AppTheme.borderRadius),
+                              ),
+                            ),
+                            onPressed: () {
+                              final custom = customCtrl.text.trim();
+                              if (custom.isNotEmpty) {
+                                Navigator.of(pickerCtx).pop(custom);
+                              }
+                            },
+                            child: const Text('Use',
+                                style: TextStyle(fontWeight: FontWeight.bold)),
+                          ),
+                        ],
+                      ),
+                    ),
+                  ],
+                ),
+              ),
             );
           },
         );
       },
-      loading: () => ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(content: Text('Loading collection...')),
-      ),
-      error: (err, stack) => ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error: $err')),
+    );
+  }
+
+  // Styled tap-to-open selector tile shown in the clutch modal
+  Widget _buildSelectorTile({
+    required String label,
+    required String? value,
+    required IconData icon,
+    required Color accentColor,
+    required bool required,
+    required VoidCallback onTap,
+  }) {
+    final hasValue = value != null && value.isNotEmpty;
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        Text(
+          '$label${required ? ' *' : ''}',
+          style: const TextStyle(
+              color: AppTheme.textSecondary, fontSize: 11),
+        ),
+        const SizedBox(height: 5),
+        GestureDetector(
+          onTap: onTap,
+          child: AnimatedContainer(
+            duration: const Duration(milliseconds: 200),
+            padding: const EdgeInsets.symmetric(horizontal: 14, vertical: 13),
+            decoration: BoxDecoration(
+              color: hasValue
+                  ? accentColor.withOpacity(0.07)
+                  : AppTheme.bgTertiary,
+              borderRadius:
+                  BorderRadius.circular(AppTheme.borderRadius),
+              border: Border.all(
+                color: hasValue ? accentColor : AppTheme.borderColor,
+                width: hasValue ? 1.5 : 1,
+              ),
+            ),
+            child: Row(
+              children: [
+                Icon(icon,
+                    size: 16,
+                    color: hasValue ? accentColor : AppTheme.textLight),
+                const SizedBox(width: 10),
+                Expanded(
+                  child: Text(
+                    hasValue ? value : 'Tap to select…',
+                    style: TextStyle(
+                      fontSize: 13,
+                      color: hasValue
+                          ? AppTheme.textPrimary
+                          : AppTheme.textLight,
+                      fontWeight: hasValue
+                          ? FontWeight.w600
+                          : FontWeight.normal,
+                    ),
+                    overflow: TextOverflow.ellipsis,
+                  ),
+                ),
+                Icon(
+                  hasValue ? Icons.check_circle : Icons.arrow_drop_down,
+                  size: 18,
+                  color: hasValue ? accentColor : AppTheme.textLight,
+                ),
+              ],
+            ),
+          ),
+        ),
+      ],
+    );
+  }
+
+  // Reusable styled text field for the modal
+  Widget _modalField({
+    required TextEditingController controller,
+    required String label,
+    required String hint,
+    required IconData icon,
+    TextInputType keyboardType = TextInputType.text,
+    String? Function(String?)? validator,
+  }) {
+    return TextFormField(
+      controller: controller,
+      keyboardType: keyboardType,
+      validator: validator,
+      style: const TextStyle(color: AppTheme.textPrimary, fontSize: 14),
+      decoration: InputDecoration(
+        labelText: label,
+        hintText: hint,
+        prefixIcon: Icon(icon, size: 16, color: AppTheme.textLight),
+        filled: true,
+        fillColor: AppTheme.bgTertiary,
+        labelStyle: const TextStyle(color: AppTheme.textSecondary, fontSize: 12),
+        hintStyle: const TextStyle(color: AppTheme.textLight, fontSize: 12),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 12, vertical: 14),
+        enabledBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          borderSide: const BorderSide(color: AppTheme.borderColor),
+        ),
+        focusedBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          borderSide: const BorderSide(color: AppTheme.primaryColor, width: 1.5),
+        ),
+        errorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          borderSide: const BorderSide(color: AppTheme.dangerColor),
+        ),
+        focusedErrorBorder: OutlineInputBorder(
+          borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+          borderSide: const BorderSide(color: AppTheme.dangerColor, width: 1.5),
+        ),
+        errorStyle: const TextStyle(color: AppTheme.dangerColor, fontSize: 10),
       ),
     );
   }
