@@ -61,29 +61,28 @@ class Reptile {
 
   // Create from Firestore document
   factory Reptile.fromMap(Map<String, dynamic> map, String id) {
+    DateTime? parseDate(dynamic val) {
+      if (val == null) return null;
+      if (val is Timestamp) return val.toDate();
+      if (val is String) return DateTime.tryParse(val);
+      return null;
+    }
+
     return Reptile(
       id: id,
       name: map['name'] ?? '',
       species: map['species'] ?? '',
       gender: map['gender'] ?? '',
       morph: map['morph'],
-      birthDate: map['birthDate'] != null 
-          ? DateTime.parse(map['birthDate']) 
-          : null,
-      acquisitionDate: map['acquisitionDate'] != null 
-          ? DateTime.parse(map['acquisitionDate']) 
-          : null,
+      birthDate: parseDate(map['birthDate']),
+      acquisitionDate: parseDate(map['acquisitionDate']),
       breeder: map['breeder'],
       notes: map['notes'],
       photoUrls: List<String>.from(map['photoUrls'] ?? []),
       status: map['status'] ?? 'active',
       measurements: Map<String, dynamic>.from(map['measurements'] ?? {}),
-      lastFeeding: map['lastFeeding'] != null 
-          ? DateTime.parse(map['lastFeeding']) 
-          : null,
-      lastHealthCheck: map['lastHealthCheck'] != null 
-          ? DateTime.parse(map['lastHealthCheck']) 
-          : null,
+      lastFeeding: parseDate(map['lastFeeding']),
+      lastHealthCheck: parseDate(map['lastHealthCheck']),
       createdAt: (map['createdAt'] as Timestamp).toDate(),
       updatedAt: (map['updatedAt'] as Timestamp).toDate(),
     );

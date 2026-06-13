@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import '../models/reptile.dart';
@@ -204,7 +205,7 @@ class ReptileService {
       await _feedingLogsRef(reptileId).add(log.toMap());
       // Update lastFeeding on the parent reptile
       await _reptilesCollection.doc(reptileId).update({
-        'lastFeeding': Timestamp.fromDate(log.feedingDate),
+        'lastFeeding': log.feedingDate.toIso8601String(),
         'updatedAt': Timestamp.fromDate(DateTime.now()),
       });
       // Log to activity history
@@ -265,6 +266,48 @@ class ReptileService {
     await _notesRef(reptileId).doc(noteId).delete();
   }
 
+  /// Combined unified stream of both activity logs and notes, sorted in reverse-chronological order.
+  Stream<List<dynamic>> watchUnifiedTimeline(String reptileId) {
+    final controller = StreamController<List<dynamic>>();
+    List<ActivityLog> logs = [];
+    List<AnimalNote> notes = [];
+
+    void emit() {
+      final combined = <dynamic>[...logs, ...notes];
+      combined.sort((a, b) {
+        final dateA = a is ActivityLog ? a.logDate : (a as AnimalNote).createdAt;
+        final dateB = b is ActivityLog ? b.logDate : (b as AnimalNote).createdAt;
+        return dateB.compareTo(dateA); // Newest first
+      });
+      if (!controller.isClosed) {
+        controller.add(combined);
+      }
+    }
+
+    final logsSub = watchActivityLogs(reptileId).listen(
+      (data) {
+        logs = data;
+        emit();
+      },
+      onError: (err) => controller.addError(err),
+    );
+
+    final notesSub = watchNotes(reptileId).listen(
+      (data) {
+        notes = data;
+        emit();
+      },
+      onError: (err) => controller.addError(err),
+    );
+
+    controller.onCancel = () {
+      logsSub.cancel();
+      notesSub.cancel();
+    };
+
+    return controller.stream;
+  }
+
   /// Updates a reptile and auto-logs weight/length changes to activity history.
   Future<void> updateReptileWithHistoryLog(String reptileId, Reptile oldReptile, Reptile newReptile) async {
     try {
@@ -274,10 +317,12 @@ class ReptileService {
       final oldWeight = oldReptile.measurements['weight'];
       final newWeight = newReptile.measurements['weight'];
       final weightUnit = newReptile.measurements['weightUnit'] ?? 'gr';
-      if (oldWeight != null && newWeight != null && oldWeight != newWeight) {
+      if (newWeight != null && oldWeight != newWeight) {
         logs.add(ActivityLog(
           event: 'Weight changed',
-          detail: '$oldWeight $weightUnit → $newWeight $weightUnit',
+          detail: oldWeight == null
+              ? 'Logged initial weight: $newWeight $weightUnit'
+              : '$oldWeight $weightUnit → $newWeight $weightUnit',
           type: 'weight_change',
           logDate: now,
         ));
@@ -286,10 +331,12 @@ class ReptileService {
       final oldLength = oldReptile.measurements['length'];
       final newLength = newReptile.measurements['length'];
       final lengthUnit = newReptile.measurements['lengthUnit'] ?? 'cm';
-      if (oldLength != null && newLength != null && oldLength != newLength) {
+      if (newLength != null && oldLength != newLength) {
         logs.add(ActivityLog(
           event: 'Length changed',
-          detail: '$oldLength $lengthUnit → $newLength $lengthUnit',
+          detail: oldLength == null
+              ? 'Logged initial length: $newLength $lengthUnit'
+              : '$oldLength $lengthUnit → $newLength $lengthUnit',
           type: 'length_change',
           logDate: now,
         ));

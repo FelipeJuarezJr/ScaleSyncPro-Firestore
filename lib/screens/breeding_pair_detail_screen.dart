@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter/services.dart';
 import 'package:intl/intl.dart';
@@ -30,24 +31,41 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
   final _reptileService = ReptileService();
   final _imagePicker = ImagePicker();
 
+  late BreedingPair _pair;
+  StreamSubscription<BreedingPair?>? _pairSub;
+
   bool _isLoadingReptiles = true;
   Reptile? _sireReptile;
   Reptile? _damReptile;
 
-  bool _showAllActivity = false;
-  bool _showAllNotes = false;
+  bool _showAllTimeline = false;
+  String _selectedCategory = 'All';
 
   @override
   void initState() {
     super.initState();
+    _pair = widget.pair;
+    _pairSub = _breedingService.watchPair(_pair.id).listen((updatedPair) {
+      if (updatedPair != null && mounted) {
+        setState(() {
+          _pair = updatedPair;
+        });
+      }
+    });
     _loadReptiles();
+  }
+
+  @override
+  void dispose() {
+    _pairSub?.cancel();
+    super.dispose();
   }
 
   Future<void> _loadReptiles() async {
     try {
       final results = await Future.wait([
-        _reptileService.getReptile(widget.pair.sireId),
-        _reptileService.getReptile(widget.pair.damId),
+        _reptileService.getReptile(_pair.sireId),
+        _reptileService.getReptile(_pair.damId),
       ]);
       if (mounted) {
         setState(() {
@@ -84,10 +102,10 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
       context: context,
       builder: (_) => AddNoteModal(
         onSave: (note) async {
-          await _breedingService.addNote(widget.pair.id, note);
+          await _breedingService.addNote(_pair.id, note);
           // Log note added to history
           await _breedingService.addActivityLog(
-            widget.pair.id,
+            _pair.id,
             ActivityLog(
               event: 'Added a note',
               detail: note.content.length > 30 ? '${note.content.substring(0, 30)}...' : note.content,
@@ -104,9 +122,72 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
     showDialog(
       context: context,
       builder: (_) => AddActivityModal(
-        onSave: (log) => _breedingService.addActivityLog(widget.pair.id, log),
+        onSave: (log) => _breedingService.addActivityLog(_pair.id, log),
       ),
     );
+  }
+
+  void _openLogLock() async {
+    final theme = Theme.of(context);
+    final isDark = theme.brightness == Brightness.dark;
+    
+    final selectedDate = await showDatePicker(
+      context: context,
+      initialDate: DateTime.now(),
+      firstDate: _pair.pairedDate,
+      lastDate: DateTime.now().add(const Duration(days: 365)),
+      builder: (context, child) {
+        return Theme(
+          data: isDark
+              ? ThemeData.dark().copyWith(
+                  colorScheme: const ColorScheme.dark(
+                    primary: AppTheme.primaryColor,
+                    onPrimary: Colors.white,
+                    surface: AppTheme.bgSecondary,
+                    onSurface: Colors.white,
+                  ),
+                  dialogBackgroundColor: AppTheme.bgSecondary,
+                )
+              : ThemeData.light().copyWith(
+                  colorScheme: const ColorScheme.light(
+                    primary: AppTheme.lightPrimaryColor,
+                    onPrimary: Colors.white,
+                    surface: Colors.white,
+                    onSurface: Colors.black,
+                  ),
+                ),
+          child: child!,
+        );
+      },
+    );
+
+    if (selectedDate != null) {
+      try {
+        await _breedingService.recordCopulation(
+          _pair.id,
+          _pair.copulationDates,
+          date: selectedDate,
+        );
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Breeding lock logged successfully!'),
+              backgroundColor: Colors.green,
+            ),
+          );
+        }
+      } catch (e) {
+        debugPrint('Error logging lock: $e');
+        if (mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            SnackBar(
+              content: Text('Failed to log lock: $e'),
+              backgroundColor: AppTheme.dangerColor,
+            ),
+          );
+        }
+      }
+    }
   }
 
   Future<void> _pickAndUploadPhoto() async {
@@ -128,7 +209,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
       final bytes = await image.readAsBytes();
       final storage = StorageService();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${image.name}';
-      final uploadPath = 'breeding_logs/${widget.pair.id}/photos/$fileName';
+      final uploadPath = 'breeding_logs/${_pair.id}/photos/$fileName';
 
       final downloadUrl = await storage.uploadFile(
         path: uploadPath,
@@ -136,11 +217,11 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
         contentType: 'image/jpeg',
       );
 
-      await _breedingService.addPhoto(widget.pair.id, downloadUrl);
+      await _breedingService.addPhoto(_pair.id, downloadUrl);
 
       // Log activity
       await _breedingService.addActivityLog(
-        widget.pair.id,
+        _pair.id,
         ActivityLog(
           event: 'Uploaded a photo',
           detail: image.name,
@@ -228,7 +309,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
       final bytes = await file.readAsBytes();
       final storage = StorageService();
       final fileName = '${DateTime.now().millisecondsSinceEpoch}_${file.name}';
-      final uploadPath = 'breeding_logs/${widget.pair.id}/files/$fileName';
+      final uploadPath = 'breeding_logs/${_pair.id}/files/$fileName';
 
       final downloadUrl = await storage.uploadFile(
         path: uploadPath,
@@ -236,11 +317,11 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
         contentType: 'image/jpeg', // Treat as image/jpeg or general binary
       );
 
-      await _breedingService.addFile(widget.pair.id, fileTitle, downloadUrl);
+      await _breedingService.addFile(_pair.id, fileTitle, downloadUrl);
 
       // Log activity
       await _breedingService.addActivityLog(
-        widget.pair.id,
+        _pair.id,
         ActivityLog(
           event: 'Uploaded a file',
           detail: fileTitle,
@@ -344,7 +425,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
   Widget _buildHeader(ThemeData theme, bool isDark) {
     final bgColor = isDark ? AppTheme.bgSecondary : AppTheme.lightBgPrimary;
     final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    final formattedDate = DateFormat('EEEE, MMMM d, yyyy').format(widget.pair.pairedDate);
+    final formattedDate = DateFormat('EEEE, MMMM d, yyyy').format(_pair.pairedDate);
 
     return Container(
       color: bgColor,
@@ -392,7 +473,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                         crossAxisAlignment: CrossAxisAlignment.start,
                         children: [
                           Text(
-                            'PAIRING: ${widget.pair.sireName} x ${widget.pair.damName}'.toUpperCase(),
+                            'PAIRING: ${_pair.sireName} x ${_pair.damName}'.toUpperCase(),
                             style: theme.textTheme.titleMedium?.copyWith(
                               fontWeight: FontWeight.bold,
                               letterSpacing: 0.5,
@@ -409,7 +490,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                         ],
                       ),
                     ),
-                    _buildStatusBadge(widget.pair.status, isDark),
+                    _buildStatusBadge(_pair.status, isDark),
                   ],
                 ),
                 const SizedBox(height: 16),
@@ -424,42 +505,53 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                             child: _buildParentProfileCard(
                               title: 'SIRE (MALE)',
                               reptile: _sireReptile,
-                              fallbackName: widget.pair.sireName,
+                              fallbackName: _pair.sireName,
                               isSire: true,
                               theme: theme,
                               isDark: isDark,
                             ),
                           ),
                           
-                          // Connection heart
+                          // Connection heart (Interactive Lock logger)
                           Padding(
                             padding: const EdgeInsets.symmetric(horizontal: 8.0),
-                            child: Column(
-                              children: [
-                                Container(
-                                  padding: const EdgeInsets.all(10),
-                                  decoration: BoxDecoration(
-                                    color: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withOpacity(0.12),
-                                    shape: BoxShape.circle,
-                                    border: Border.all(
-                                      color: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withOpacity(0.3),
-                                    ),
-                                  ),
-                                  child: Icon(
-                                    Icons.favorite,
-                                    color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
-                                    size: 20,
+                            child: Tooltip(
+                              message: 'Log Lock',
+                              child: InkWell(
+                                onTap: _openLogLock,
+                                borderRadius: BorderRadius.circular(24),
+                                child: Padding(
+                                  padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                                  child: Column(
+                                    children: [
+                                      Container(
+                                        padding: const EdgeInsets.all(10),
+                                        decoration: BoxDecoration(
+                                          color: Colors.redAccent.withOpacity(0.12),
+                                          shape: BoxShape.circle,
+                                          border: Border.all(
+                                            color: Colors.redAccent.withOpacity(0.3),
+                                          ),
+                                        ),
+                                        child: const Icon(
+                                          Icons.favorite,
+                                          color: Colors.redAccent,
+                                          size: 20,
+                                        ),
+                                      ),
+                                      const SizedBox(height: 4),
+                                      Text(
+                                        '${_pair.copulationDates.length} Locks',
+                                        style: theme.textTheme.bodySmall?.copyWith(
+                                          fontWeight: FontWeight.bold,
+                                          fontSize: 10,
+                                          color: Colors.redAccent,
+                                        ),
+                                      ),
+                                    ],
                                   ),
                                 ),
-                                const SizedBox(height: 4),
-                                Text(
-                                  '${widget.pair.copulationDates.length} Locks',
-                                  style: theme.textTheme.bodySmall?.copyWith(
-                                    fontWeight: FontWeight.bold,
-                                    fontSize: 10,
-                                  ),
-                                ),
-                              ],
+                              ),
                             ),
                           ),
                           
@@ -468,7 +560,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                             child: _buildParentProfileCard(
                               title: 'DAME (FEMALE)',
                               reptile: _damReptile,
-                              fallbackName: widget.pair.damName,
+                              fallbackName: _pair.damName,
                               isSire: false,
                               theme: theme,
                               isDark: isDark,
@@ -627,16 +719,14 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
     return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
       children: [
-        // Left Column (History & Notes)
+        // Left Column (Timeline)
         Expanded(
           flex: 5,
           child: SingleChildScrollView(
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildHistorySection(),
-                const SizedBox(height: 16),
-                _buildNotesSection(),
+                _buildTimelineSection(),
               ],
             ),
           ),
@@ -669,9 +759,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildHistorySection(),
-          const SizedBox(height: 16),
-          _buildNotesSection(),
+          _buildTimelineSection(),
           const SizedBox(height: 16),
           _buildPhotosSection(),
           const SizedBox(height: 16),
@@ -684,108 +772,209 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
 
   // ─── Section widgets ──────────────────────────────────────────────────
 
-  Widget _buildNotesSection() {
-    return StreamBuilder<List<AnimalNote>>(
-      stream: _breedingService.watchNotes(widget.pair.id),
-      builder: (context, snapshot) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        final notes = snapshot.data ?? [];
-        final visibleNotes = _showAllNotes ? notes : notes.take(3).toList();
-
-        return DetailSectionCard(
-          title: 'Notes',
-          onAdd: _openAddNote,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (snapshot.connectionState == ConnectionState.waiting && notes.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (notes.isEmpty)
-                _emptyMessage('You haven\'t added any notes yet', isDark, theme)
-              else
-                ...visibleNotes.map((note) => _noteTile(note, isDark, theme)),
-              if (notes.length > 3)
-                _showMoreButton(
-                  _showAllNotes ? 'SHOW LESS' : 'SHOW ALL NOTES',
-                  () => setState(() => _showAllNotes = !_showAllNotes),
-                  isDark, theme,
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _noteTile(AnimalNote note, bool isDark, ThemeData theme) {
-    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    return Dismissible(
-      key: Key(note.id ?? note.createdAt.toIso8601String()),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: AppTheme.dangerColor.withOpacity(0.15),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
-      ),
-      onDismissed: (_) => _breedingService.deleteNote(widget.pair.id, note.id!),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
-        ),
+  Widget _buildFilterChips(bool isDark, ThemeData theme) {
+    final categories = ['All', 'Notes', 'Locks', 'General'];
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
         child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(note.content,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary)),
-            ),
-            const SizedBox(width: 12),
-            Text(_timeAgo(note.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
-          ],
+          children: categories.map((cat) {
+            final selected = _selectedCategory == cat;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(cat, style: const TextStyle(fontSize: 12)),
+                selected: selected,
+                onSelected: (val) {
+                  if (val) setState(() => _selectedCategory = cat);
+                },
+                selectedColor: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withOpacity(0.2),
+                checkmarkColor: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+              ),
+            );
+          }).toList(),
         ),
       ),
     );
   }
 
-  Widget _buildHistorySection() {
-    return StreamBuilder<List<ActivityLog>>(
-      stream: _breedingService.watchActivityLogs(widget.pair.id),
+  Widget _buildTimelineSection() {
+    return StreamBuilder<List<dynamic>>(
+      stream: _breedingService.watchUnifiedTimeline(_pair.id),
       builder: (context, snapshot) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        final logs = snapshot.data ?? [];
-        final visibleLogs = _showAllActivity ? logs : logs.take(5).toList();
+        final allItems = snapshot.data ?? [];
+
+        // Apply filtering
+        final filteredItems = allItems.where((item) {
+          if (_selectedCategory == 'All') return true;
+          if (_selectedCategory == 'Notes') {
+            return item is AnimalNote;
+          }
+          final isLock = item is ActivityLog && (
+              item.event.toLowerCase().contains('breeding') ||
+              item.event.toLowerCase().contains('copulation') ||
+              item.detail?.toLowerCase().contains('observed') == true
+          );
+          if (_selectedCategory == 'Locks') {
+            return isLock;
+          }
+          if (_selectedCategory == 'General') {
+            return item is ActivityLog && !isLock;
+          }
+          return true;
+        }).toList();
+
+        final visibleItems = _showAllTimeline ? filteredItems : filteredItems.take(5).toList();
 
         return DetailSectionCard(
-          title: 'History',
-          onAdd: _openAddActivity,
+          title: 'Activity Timeline',
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: 'Log General Activity',
+                child: InkWell(
+                  onTap: _openAddActivity,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.assignment_turned_in,
+                        size: 18,
+                        color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Log Lock',
+                child: InkWell(
+                  onTap: _openLogLock,
+                  borderRadius: BorderRadius.circular(4),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.favorite,
+                        size: 18,
+                        color: Colors.redAccent),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Add Note',
+                child: InkWell(
+                  onTap: _openAddNote,
+                  borderRadius: BorderRadius.circular(4),
+                  child: const Padding(
+                    padding: EdgeInsets.all(6),
+                    child: Icon(Icons.note_add,
+                        size: 18,
+                        color: Colors.amber),
+                  ),
+                ),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (snapshot.connectionState == ConnectionState.waiting && logs.isEmpty)
+              _buildFilterChips(isDark, theme),
+              const Divider(height: 1, thickness: 0.5),
+              if (snapshot.connectionState == ConnectionState.waiting && allItems.isEmpty)
                 const Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(24),
                   child: Center(child: CircularProgressIndicator()),
                 )
-              else if (logs.isEmpty)
-                _emptyMessage('No activity logged yet. Tap + to add an entry.', isDark, theme)
-              else
-                ...visibleLogs.map((log) => _activityTile(log, isDark, theme)),
-              if (logs.length > 5)
-                _showMoreButton(
-                  _showAllActivity ? 'SHOW LESS' : 'SHOW ALL HISTORY',
-                  () => setState(() => _showAllActivity = !_showAllActivity),
-                  isDark, theme,
+              else if (filteredItems.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: Column(
+                      mainAxisSize: MainAxisSize.min,
+                      children: [
+                        Icon(
+                          _selectedCategory == 'Locks'
+                              ? Icons.favorite_border
+                              : _selectedCategory == 'Notes'
+                                  ? Icons.note_add_outlined
+                                  : Icons.assignment_outlined,
+                          size: 48,
+                          color: (isDark ? AppTheme.textLight : AppTheme.lightTextLight).withOpacity(0.5),
+                        ),
+                        const SizedBox(height: 12),
+                        Text(
+                          'No ${_selectedCategory.toLowerCase() == 'all' ? 'events' : _selectedCategory.toLowerCase()} found for this pair.',
+                          style: theme.textTheme.bodyMedium?.copyWith(
+                            color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                          ),
+                        ),
+                        const SizedBox(height: 16),
+                        ElevatedButton.icon(
+                          onPressed: () {
+                            if (_selectedCategory == 'Locks') {
+                              _openLogLock();
+                            } else if (_selectedCategory == 'Notes') {
+                              _openAddNote();
+                            } else {
+                              _openAddActivity();
+                            }
+                          },
+                          icon: Icon(
+                            _selectedCategory == 'Locks'
+                                ? Icons.favorite
+                                : _selectedCategory == 'Notes'
+                                    ? Icons.note_add
+                                    : Icons.add,
+                            size: 16,
+                            color: isDark ? Colors.black : Colors.white,
+                          ),
+                          label: Text(
+                            _selectedCategory == 'Locks'
+                                ? 'Log Lock'
+                                : _selectedCategory == 'Notes'
+                                    ? 'Add Note'
+                                    : 'Log Activity',
+                            style: const TextStyle(fontWeight: FontWeight.bold),
+                          ),
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: _selectedCategory == 'Locks'
+                                ? Colors.redAccent
+                                : _selectedCategory == 'Notes'
+                                    ? Colors.amber
+                                    : (isDark ? AppTheme.primaryColor : const Color(0xFF2C5530)),
+                            foregroundColor: isDark ? Colors.black : Colors.white,
+                            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                            ),
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                )
+              else ...[
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: visibleItems.length,
+                  itemBuilder: (context, index) {
+                    final item = visibleItems[index];
+                    final isFirst = index == 0;
+                    final isLast = index == visibleItems.length - 1 && visibleItems.length == filteredItems.length;
+                    return _buildTimelineItem(item, isFirst, isLast, isDark, theme);
+                  },
                 ),
+                if (filteredItems.length > 5)
+                  _showMoreButton(
+                    _showAllTimeline ? 'SHOW LESS' : 'SHOW ALL HISTORY',
+                    () => setState(() => _showAllTimeline = !_showAllTimeline),
+                    isDark,
+                    theme,
+                  ),
+              ],
             ],
           ),
         );
@@ -793,44 +982,145 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
     );
   }
 
-  Widget _activityTile(ActivityLog log, bool isDark, ThemeData theme) {
-    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
-      ),
+  Widget _buildTimelineItem(dynamic item, bool isFirst, bool isLast, bool isDark, ThemeData theme) {
+    // Get date
+    final date = item is ActivityLog ? item.logDate : (item as AnimalNote).createdAt;
+    
+    // Determine type, title, detail, icon, and accent color
+    String type;
+    String title;
+    String? detail;
+    IconData iconData;
+    Color color;
+
+    if (item is AnimalNote) {
+      type = 'note';
+      title = 'Note Added';
+      detail = item.content;
+      iconData = Icons.description;
+      color = Colors.amber;
+    } else {
+      final log = item as ActivityLog;
+      type = log.type;
+      title = log.event;
+      detail = log.detail;
+      
+      final isLock = log.event.toLowerCase().contains('breeding') ||
+          log.event.toLowerCase().contains('copulation') ||
+          log.detail?.toLowerCase().contains('observed') == true;
+          
+      if (isLock) {
+        iconData = Icons.favorite;
+        color = Colors.redAccent;
+      } else {
+        switch (type) {
+          case 'photo':
+            iconData = Icons.photo;
+            color = const Color(0xFFAD1457);
+            break;
+          default:
+            iconData = Icons.circle_outlined;
+            color = isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary;
+            break;
+        }
+      }
+    }
+
+    final lineColor = isDark ? AppTheme.borderColor.withOpacity(0.3) : AppTheme.lightBorderColor.withOpacity(0.5);
+
+    Widget tileContent = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
-          Icon(
-            log.event.toLowerCase().contains('breeding') || log.event.toLowerCase().contains('copulation')
-                ? Icons.favorite
-                : Icons.circle_outlined,
-            size: 14,
-            color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+          // Timeline indicator (Line + Icon Dot)
+          Column(
+            children: [
+              // Top line
+              Container(
+                width: 2,
+                height: 8,
+                color: isFirst ? Colors.transparent : lineColor,
+              ),
+              // Icon Dot
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withOpacity(0.15),
+                  border: Border.all(color: color, width: 1.5),
+                ),
+                child: Center(
+                  child: Icon(iconData, size: 14, color: color),
+                ),
+              ),
+              // Bottom line
+              Container(
+                width: 2,
+                height: 28,
+                color: isLast ? Colors.transparent : lineColor,
+              ),
+            ],
           ),
-          const SizedBox(width: 10),
+          const SizedBox(width: 16),
+          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(log.event,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary)),
-                if (log.detail != null)
-                  Text(log.detail!,
+                const SizedBox(height: 12),
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _timeAgo(date),
                       style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary)),
+                        color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                      ),
+                    ),
+                  ],
+                ),
+                if (detail != null && detail.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    detail,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary,
+                    ),
+                  ),
+                ],
               ],
             ),
           ),
-          Text(_timeAgo(log.logDate),
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
         ],
       ),
     );
+
+    if (type == 'note' && item is AnimalNote) {
+      return Dismissible(
+        key: Key(item.id ?? item.createdAt.toIso8601String()),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          color: AppTheme.dangerColor.withOpacity(0.15),
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 16),
+          child: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
+        ),
+        onDismissed: (_) => _breedingService.deleteNote(_pair.id, item.id!),
+        child: tileContent,
+      );
+    }
+
+    return tileContent;
   }
 
   Widget _buildPhotosSection() {
@@ -838,7 +1128,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
     final isDark = theme.brightness == Brightness.dark;
 
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _breedingService.watchPhotos(widget.pair.id),
+      stream: _breedingService.watchPhotos(_pair.id),
       builder: (context, snapshot) {
         final photos = snapshot.data ?? [];
 
@@ -881,7 +1171,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                             top: 4,
                             right: 4,
                             child: InkWell(
-                              onTap: () => _breedingService.deletePhoto(widget.pair.id, photoId),
+                              onTap: () => _breedingService.deletePhoto(_pair.id, photoId),
                               child: Container(
                                 padding: const EdgeInsets.all(4),
                                 decoration: const BoxDecoration(
@@ -908,7 +1198,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
     final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
 
     return StreamBuilder<List<Map<String, dynamic>>>(
-      stream: _breedingService.watchFiles(widget.pair.id),
+      stream: _breedingService.watchFiles(_pair.id),
       builder: (context, snapshot) {
         final files = snapshot.data ?? [];
 
@@ -967,7 +1257,7 @@ class _BreedingPairDetailScreenState extends State<BreedingPairDetailScreen> {
                         IconButton(
                           icon: Icon(Icons.delete_outline,
                               size: 16, color: isDark ? AppTheme.textLight : AppTheme.lightTextLight),
-                          onPressed: () => _breedingService.deleteFile(widget.pair.id, fileId),
+                          onPressed: () => _breedingService.deleteFile(_pair.id, fileId),
                         ),
                       ],
                     ),

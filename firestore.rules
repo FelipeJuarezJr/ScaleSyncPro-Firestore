@@ -9,11 +9,19 @@ service cloud.firestore {
       // Subcollection for User Reptiles
       match /reptiles/{reptileId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        match /{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
 
       // Subcollection for User Breeding Logs
       match /breeding_logs/{logId} {
         allow read, write: if request.auth != null && request.auth.uid == userId;
+
+        match /{document=**} {
+          allow read, write: if request.auth != null && request.auth.uid == userId;
+        }
       }
 
       // Subcollection for User Clutches

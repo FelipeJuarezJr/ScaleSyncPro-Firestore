@@ -1,15 +1,15 @@
 import 'package:flutter/material.dart';
-import '../models/reptile.dart';
-import '../models/feeding_log.dart';
-import '../models/activity_log.dart';
-import '../models/animal_note.dart';
-import '../services/reptile_service.dart';
-import '../utils/theme.dart';
-import '../widgets/animal_detail/detail_section_card.dart';
-import '../widgets/animal_detail/add_feeding_modal.dart';
-import '../widgets/animal_detail/add_note_modal.dart';
-import '../widgets/animal_detail/add_activity_modal.dart';
-import '../widgets/animal_detail/edit_reptile_modal.dart';
+import 'package:scalesyncpro_firestore/models/reptile.dart';
+import 'package:scalesyncpro_firestore/models/activity_log.dart';
+import 'package:scalesyncpro_firestore/models/animal_note.dart';
+import 'package:scalesyncpro_firestore/services/reptile_service.dart';
+import 'package:scalesyncpro_firestore/utils/theme.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/detail_section_card.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/add_feeding_modal.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/add_note_modal.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/add_activity_modal.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/edit_reptile_modal.dart';
+import 'package:scalesyncpro_firestore/widgets/animal_detail/add_measurement_modal.dart';
 
 class AnimalDetailScreen extends StatefulWidget {
   final Reptile reptile;
@@ -24,9 +24,8 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
   late Reptile _reptile;
   final _service = ReptileService();
 
-  bool _showAllFeedings = false;
-  bool _showAllActivity = false;
-  bool _showAllNotes = false;
+  String _selectedCategory = 'All';
+  bool _showAllTimeline = false;
 
   @override
   void initState() {
@@ -95,6 +94,31 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
         onSave: (note) => _service.addNote(_reptile.id!, note),
       ),
     );
+  }
+
+  void _openAddMeasurement() async {
+    final updated = await showDialog<bool>(
+      context: context,
+      builder: (_) => AddMeasurementModal(
+        reptile: _reptile,
+        onSave: (weight, weightUnit, length, lengthUnit) async {
+          final newReptile = _reptile.copyWith(
+            measurements: {
+              ..._reptile.measurements,
+              if (weight != null) 'weight': weight,
+              'weightUnit': weightUnit,
+              if (length != null) 'length': length,
+              'lengthUnit': lengthUnit,
+            },
+          );
+          await _service.updateReptileWithHistoryLog(_reptile.id!, _reptile, newReptile);
+        },
+      ),
+    );
+    if (updated == true && mounted) {
+      final fresh = await _service.getReptile(_reptile.id!);
+      if (fresh != null && mounted) setState(() => _reptile = fresh);
+    }
   }
 
   void _confirmDeleteReptile() {
@@ -190,75 +214,38 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
               ],
             ),
           ),
+          
           // Animal info row
           Padding(
-            padding: const EdgeInsets.fromLTRB(16, 16, 16, 12),
-            child: Row(
-              crossAxisAlignment: CrossAxisAlignment.center,
+            padding: const EdgeInsets.all(16.0),
+            child: Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                // Avatar
-                ClipRRect(
-                  borderRadius: BorderRadius.circular(40),
-                  child: Container(
-                    width: 64,
-                    height: 64,
-                    decoration: BoxDecoration(
-                      shape: BoxShape.circle,
-                      color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
-                    ),
-                    child: _reptile.photoUrls.isNotEmpty
-                        ? Image.network(_reptile.photoUrls.first, fit: BoxFit.cover,
-                            errorBuilder: (_, __, ___) => _avatarPlaceholder(isDark))
-                        : _avatarPlaceholder(isDark),
-                  ),
-                ),
-                const SizedBox(width: 16),
-                // Name + species
-                Expanded(
-                  child: Column(
-                    crossAxisAlignment: CrossAxisAlignment.start,
-                    children: [
-                      Text(
-                        _reptile.name.toUpperCase(),
-                        style: theme.textTheme.headlineMedium?.copyWith(
-                            fontWeight: FontWeight.bold,
-                            color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary),
-                      ),
-                      Text(
-                        _reptile.species,
-                        style: theme.textTheme.bodyMedium?.copyWith(
-                            color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary),
-                      ),
-                    ],
-                  ),
-                ),
-                // Stats chips
-                Wrap(
-                  spacing: 20,
-                  crossAxisAlignment: WrapCrossAlignment.center,
-                  children: [
-                    _statChip(_ageLabel(), 'age', theme, isDark),
-                    if (weight != null)
-                      _statChip('$weight $weightUnit', 'weight', theme, isDark),
-                    if (length != null)
-                      _statChip('$length $lengthUnit', 'length', theme, isDark),
-                  ],
-                ),
-                const SizedBox(width: 16),
-                // Action buttons
                 Row(
                   children: [
-                    OutlinedButton.icon(
-                      onPressed: _openEditModal,
-                      icon: const Icon(Icons.edit_outlined, size: 16),
-                      label: const Text('Edit details'),
-                      style: OutlinedButton.styleFrom(
-                        foregroundColor: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
-                        side: BorderSide(
-                            color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor),
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 8),
+                    Expanded(
+                      child: Column(
+                        crossAxisAlignment: CrossAxisAlignment.start,
+                        children: [
+                          Text(
+                            'ANIMAL: ${_reptile.name}'.toUpperCase(),
+                            style: theme.textTheme.titleMedium?.copyWith(
+                              fontWeight: FontWeight.bold,
+                              letterSpacing: 0.5,
+                              color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+                            ),
+                          ),
+                          const SizedBox(height: 4),
+                          Text(
+                            'Species: ${_reptile.species} | Morph: ${_reptile.morph ?? 'Normal'}',
+                            style: theme.textTheme.bodySmall?.copyWith(
+                              color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary,
+                            ),
+                          ),
+                        ],
                       ),
                     ),
+                    _buildStatusBadge(_reptile.status, isDark),
                     const SizedBox(width: 8),
                     PopupMenuButton<String>(
                       onSelected: (val) {
@@ -268,15 +255,74 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                         const PopupMenuItem(value: 'delete', child: Text('Delete animal')),
                       ],
                       child: Container(
-                        padding: const EdgeInsets.all(8),
+                        padding: const EdgeInsets.all(6),
                         decoration: BoxDecoration(
                           border: Border.all(
                               color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor),
                           borderRadius: BorderRadius.circular(AppTheme.borderRadius),
                         ),
-                        child: Icon(Icons.more_vert, size: 18,
+                        child: Icon(Icons.more_vert, size: 16,
                             color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary),
                       ),
+                    ),
+                  ],
+                ),
+                const SizedBox(height: 16),
+                
+                // Details side-by-side (Sire and Dame style)
+                Row(
+                  children: [
+                    // Identity Card
+                    Expanded(
+                      child: _buildIdentityProfileCard(theme, isDark),
+                    ),
+                    
+                    // Center edit connection button
+                    Padding(
+                      padding: const EdgeInsets.symmetric(horizontal: 8.0),
+                      child: Tooltip(
+                        message: 'Edit Details',
+                        child: InkWell(
+                          onTap: _openEditModal,
+                          borderRadius: BorderRadius.circular(24),
+                          child: Padding(
+                            padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 8.0),
+                            child: Column(
+                              children: [
+                                Container(
+                                  padding: const EdgeInsets.all(10),
+                                  decoration: BoxDecoration(
+                                    color: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withValues(alpha: 0.12),
+                                    shape: BoxShape.circle,
+                                    border: Border.all(
+                                      color: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withValues(alpha: 0.3),
+                                    ),
+                                  ),
+                                  child: Icon(
+                                    Icons.edit_outlined,
+                                    color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                                    size: 20,
+                                  ),
+                                ),
+                                const SizedBox(height: 4),
+                                Text(
+                                  'Edit Details',
+                                  style: theme.textTheme.bodySmall?.copyWith(
+                                    fontWeight: FontWeight.bold,
+                                    fontSize: 10,
+                                    color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                                  ),
+                                ),
+                              ],
+                            ),
+                          ),
+                        ),
+                      ),
+                    ),
+                    
+                    // Stats Card
+                    Expanded(
+                      child: _buildStatsProfileCard(weight, weightUnit, length, lengthUnit, theme, isDark),
                     ),
                   ],
                 ),
@@ -289,26 +335,207 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     );
   }
 
-  Widget _avatarPlaceholder(bool isDark) {
+  Widget _buildStatusBadge(String status, bool isDark) {
+    Color color = isDark ? AppTheme.successColor : AppTheme.lightSuccessColor;
+    final sLower = status.toLowerCase();
+    if (sLower == 'sold' || sLower == 'deceased') {
+      color = isDark ? AppTheme.dangerColor : AppTheme.lightDangerColor;
+    } else if (sLower == 'breeding') {
+      color = isDark ? AppTheme.warningColor : AppTheme.lightWarningColor;
+    } else if (sLower == 'inactive') {
+      color = isDark ? AppTheme.textLight : AppTheme.lightTextLight;
+    }
+
     return Container(
-      color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
-      child: Icon(Icons.pets, size: 28,
-          color: isDark ? AppTheme.textLight : AppTheme.lightTextLight),
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+      decoration: BoxDecoration(
+        color: color.withValues(alpha: 0.15),
+        borderRadius: BorderRadius.circular(4),
+        border: Border.all(color: color.withValues(alpha: 0.4), width: 1),
+      ),
+      child: Text(
+        status.toUpperCase(),
+        style: TextStyle(
+          color: color,
+          fontSize: 10,
+          fontWeight: FontWeight.bold,
+        ),
+      ),
     );
   }
 
-  Widget _statChip(String value, String label, ThemeData theme, bool isDark) {
-    return Column(
-      crossAxisAlignment: CrossAxisAlignment.start,
-      children: [
-        Text(value,
-            style: theme.textTheme.titleMedium?.copyWith(
-                fontWeight: FontWeight.bold,
-                color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor)),
-        Text(label,
-            style: theme.textTheme.bodySmall?.copyWith(
-                color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
-      ],
+  Widget _buildIdentityProfileCard(ThemeData theme, bool isDark) {
+    final avatarColor = isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary;
+    final textColor = isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary;
+    final subColor = isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary;
+    final isMale = _reptile.gender.toLowerCase() == 'male';
+
+    return Card(
+      color: isDark ? AppTheme.bgTertiary.withValues(alpha: 0.4) : Colors.white,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        side: BorderSide(
+          color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor,
+          width: 0.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            // Thumbnail / Avatar
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 40,
+                height: 40,
+                color: avatarColor,
+                child: _reptile.photoUrls.isNotEmpty
+                    ? Image.network(
+                        _reptile.photoUrls.first,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Icon(
+                          isMale ? Icons.male : Icons.female,
+                          size: 20,
+                          color: isMale ? Colors.blue : Colors.pink,
+                        ),
+                      )
+                    : Icon(
+                        isMale ? Icons.male : Icons.female,
+                        size: 20,
+                        color: isMale ? Colors.blue : Colors.pink,
+                      ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            
+            // Text Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'IDENTITY',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: isMale ? Colors.blue : Colors.pink,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    _reptile.gender.toUpperCase(),
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  Text(
+                    _reptile.species,
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      color: subColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildStatsProfileCard(
+    dynamic weight,
+    String weightUnit,
+    dynamic length,
+    String lengthUnit,
+    ThemeData theme,
+    bool isDark,
+  ) {
+    final avatarColor = isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary;
+    final textColor = isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary;
+    final subColor = isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary;
+
+    final weightText = weight != null ? '$weight $weightUnit' : '—';
+    final lengthText = length != null ? '$length $lengthUnit' : '—';
+
+    return Card(
+      color: isDark ? AppTheme.bgTertiary.withValues(alpha: 0.4) : Colors.white,
+      margin: EdgeInsets.zero,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+        side: BorderSide(
+          color: isDark ? AppTheme.borderColor : AppTheme.lightBorderColor,
+          width: 0.5,
+        ),
+      ),
+      child: Padding(
+        padding: const EdgeInsets.all(10.0),
+        child: Row(
+          children: [
+            // Thumbnail / Icon
+            ClipRRect(
+              borderRadius: BorderRadius.circular(20),
+              child: Container(
+                width: 40,
+                height: 40,
+                color: avatarColor,
+                child: Icon(
+                  Icons.scale_outlined,
+                  size: 20,
+                  color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                ),
+              ),
+            ),
+            const SizedBox(width: 10),
+            
+            // Text Details
+            Expanded(
+              child: Column(
+                crossAxisAlignment: CrossAxisAlignment.start,
+                children: [
+                  Text(
+                    'STATS & AGE',
+                    style: TextStyle(
+                      fontSize: 9,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 0.5,
+                      color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                    ),
+                  ),
+                  const SizedBox(height: 2),
+                  Text(
+                    'Age: ${_ageLabel()}',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodyMedium?.copyWith(
+                      fontWeight: FontWeight.bold,
+                      color: textColor,
+                    ),
+                  ),
+                  Text(
+                    '$weightText | $lengthText',
+                    maxLines: 1,
+                    overflow: TextOverflow.ellipsis,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      fontSize: 10,
+                      color: subColor,
+                    ),
+                  ),
+                ],
+              ),
+            ),
+          ],
+        ),
+      ),
     );
   }
 
@@ -324,9 +551,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildFeedingSection(),
-                const SizedBox(height: 16),
-                _buildHistorySection(),
+                _buildTimelineSection(),
               ],
             ),
           ),
@@ -342,8 +567,6 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
             padding: const EdgeInsets.all(16),
             child: Column(
               children: [
-                _buildNotesSection(),
-                const SizedBox(height: 16),
                 _buildPhotosSection(),
                 const SizedBox(height: 16),
                 _buildFilesSection(),
@@ -360,11 +583,7 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
       padding: const EdgeInsets.all(16),
       child: Column(
         children: [
-          _buildFeedingSection(),
-          const SizedBox(height: 16),
-          _buildHistorySection(),
-          const SizedBox(height: 16),
-          _buildNotesSection(),
+          _buildTimelineSection(),
           const SizedBox(height: 16),
           _buildPhotosSection(),
           const SizedBox(height: 16),
@@ -375,39 +594,238 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     );
   }
 
-  // ─── Section widgets ──────────────────────────────────────────────────
+  // ─── Timeline UI ────────────────────────────────────────────────────────
 
-  Widget _buildFeedingSection() {
-    return StreamBuilder<List<FeedingLog>>(
-      stream: _service.watchFeedingLogs(_reptile.id!),
+  Widget _buildFilterChips(bool isDark, ThemeData theme) {
+    final categories = ['All', 'Feedings', 'Notes', 'Measurements', 'General'];
+
+    return SingleChildScrollView(
+      scrollDirection: Axis.horizontal,
+      child: Padding(
+        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 8),
+        child: Row(
+          children: categories.map((cat) {
+            final selected = _selectedCategory == cat;
+            return Padding(
+              padding: const EdgeInsets.only(right: 8),
+              child: ChoiceChip(
+                label: Text(cat, style: const TextStyle(fontSize: 12)),
+                selected: selected,
+                onSelected: (val) {
+                  if (val) setState(() => _selectedCategory = cat);
+                },
+                selectedColor: (isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor).withValues(alpha: 0.2),
+                checkmarkColor: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+              ),
+            );
+          }).toList(),
+        ),
+      ),
+    );
+  }
+
+  Widget _buildTimelineSection() {
+    return StreamBuilder<List<dynamic>>(
+      stream: _service.watchUnifiedTimeline(_reptile.id!),
       builder: (context, snapshot) {
         final theme = Theme.of(context);
         final isDark = theme.brightness == Brightness.dark;
-        final logs = snapshot.data ?? [];
-        final visibleLogs = _showAllFeedings ? logs : logs.take(3).toList();
+        final allItems = snapshot.data ?? [];
+
+        final weight = _reptile.measurements['weight'];
+        final weightUnit = _reptile.measurements['weightUnit'] ?? 'gr';
+        final length = _reptile.measurements['length'];
+        final lengthUnit = _reptile.measurements['lengthUnit'] ?? 'cm';
+
+        // Apply filtering
+        final filteredItems = allItems.where((item) {
+          if (_selectedCategory == 'All') return true;
+          if (_selectedCategory == 'Feedings') {
+            return item is ActivityLog && item.type == 'feeding';
+          }
+          if (_selectedCategory == 'Notes') {
+            return item is AnimalNote;
+          }
+          if (_selectedCategory == 'Measurements') {
+            return item is ActivityLog && (item.type == 'weight_change' || item.type == 'length_change');
+          }
+          if (_selectedCategory == 'General') {
+            return item is ActivityLog &&
+                item.type != 'feeding' &&
+                item.type != 'weight_change' &&
+                item.type != 'length_change';
+          }
+          return true;
+        }).toList();
+
+        final visibleItems = _showAllTimeline ? filteredItems : filteredItems.take(5).toList();
 
         return DetailSectionCard(
-          title: 'Feeding',
-          onSettings: () {},
-          onAdd: _openAddFeeding,
+          title: 'Activity Timeline',
+          trailing: Row(
+            mainAxisSize: MainAxisSize.min,
+            children: [
+              Tooltip(
+                message: 'Log Feeding',
+                child: InkWell(
+                  onTap: _openAddFeeding,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.restaurant,
+                        size: 18,
+                        color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Log Measurements',
+                child: InkWell(
+                  onTap: _openAddMeasurement,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.scale_outlined,
+                        size: 18,
+                        color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Log Activity',
+                child: InkWell(
+                  onTap: _openAddActivity,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.history,
+                        size: 18,
+                        color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
+                  ),
+                ),
+              ),
+              const SizedBox(width: 4),
+              Tooltip(
+                message: 'Add Note',
+                child: InkWell(
+                  onTap: _openAddNote,
+                  borderRadius: BorderRadius.circular(4),
+                  child: Padding(
+                    padding: const EdgeInsets.all(6),
+                    child: Icon(Icons.note_add,
+                        size: 18,
+                        color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
+                  ),
+                ),
+              ),
+            ],
+          ),
           child: Column(
             crossAxisAlignment: CrossAxisAlignment.start,
             children: [
-              if (snapshot.connectionState == ConnectionState.waiting && logs.isEmpty)
+              _buildFilterChips(isDark, theme),
+              const Divider(height: 1, thickness: 0.5),
+              if (snapshot.connectionState == ConnectionState.waiting && allItems.isEmpty)
                 const Padding(
-                  padding: EdgeInsets.all(16),
+                  padding: EdgeInsets.all(24),
                   child: Center(child: CircularProgressIndicator()),
                 )
-              else if (logs.isEmpty)
-                _emptyMessage('No feeding logs yet. Tap + to log a feeding.', isDark, theme)
-              else
-                ...visibleLogs.map((log) => _feedingTile(log, isDark, theme)).toList(),
-              if (logs.length > 3)
-                _showMoreButton(
-                  _showAllFeedings ? 'SHOW LESS' : 'SHOW ALL HISTORY',
-                  () => setState(() => _showAllFeedings = !_showAllFeedings),
-                  isDark, theme,
+              else if (filteredItems.isEmpty)
+                Padding(
+                  padding: const EdgeInsets.all(24),
+                  child: Center(
+                    child: _selectedCategory == 'Measurements' && (weight != null || length != null)
+                        ? _buildCurrentMeasurementsCard(theme, isDark, weight, weightUnit, length, lengthUnit)
+                        : Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                _selectedCategory == 'Feedings'
+                                    ? Icons.restaurant
+                                    : _selectedCategory == 'Measurements'
+                                        ? Icons.scale_outlined
+                                        : _selectedCategory == 'Notes'
+                                            ? Icons.note_add_outlined
+                                            : Icons.history,
+                                size: 48,
+                                color: (isDark ? AppTheme.textLight : AppTheme.lightTextLight).withValues(alpha: 0.5),
+                              ),
+                              const SizedBox(height: 12),
+                              Text(
+                                'No ${_selectedCategory.toLowerCase() == 'all' ? 'events' : _selectedCategory.toLowerCase()} found for this animal.',
+                                style: theme.textTheme.bodyMedium?.copyWith(
+                                  color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                                ),
+                              ),
+                              const SizedBox(height: 16),
+                              ElevatedButton.icon(
+                                onPressed: () {
+                                  if (_selectedCategory == 'Feedings') {
+                                    _openAddFeeding();
+                                  } else if (_selectedCategory == 'Measurements') {
+                                    _openAddMeasurement();
+                                  } else if (_selectedCategory == 'Notes') {
+                                    _openAddNote();
+                                  } else {
+                                    _openAddActivity();
+                                  }
+                                },
+                                icon: Icon(
+                                  _selectedCategory == 'Feedings'
+                                      ? Icons.restaurant
+                                      : _selectedCategory == 'Measurements'
+                                          ? Icons.scale_outlined
+                                          : _selectedCategory == 'Notes'
+                                              ? Icons.note_add
+                                              : Icons.add,
+                                  size: 16,
+                                  color: isDark ? Colors.black : Colors.white,
+                                ),
+                                label: Text(
+                                  _selectedCategory == 'Feedings'
+                                      ? 'Log Feeding'
+                                      : _selectedCategory == 'Measurements'
+                                          ? 'Log Measurements'
+                                          : _selectedCategory == 'Notes'
+                                              ? 'Add Note'
+                                              : 'Log Activity',
+                                  style: const TextStyle(fontWeight: FontWeight.bold),
+                                ),
+                                style: ElevatedButton.styleFrom(
+                                  backgroundColor: isDark ? AppTheme.primaryColor : const Color(0xFF2C5530),
+                                  foregroundColor: isDark ? Colors.black : Colors.white,
+                                  padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
+                                  shape: RoundedRectangleBorder(
+                                    borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                                  ),
+                                ),
+                              ),
+                            ],
+                          ),
+                  ),
+                )
+              else ...[
+                ListView.builder(
+                  shrinkWrap: true,
+                  physics: const NeverScrollableScrollPhysics(),
+                  itemCount: visibleItems.length,
+                  itemBuilder: (context, index) {
+                    final item = visibleItems[index];
+                    final isFirst = index == 0;
+                    final isLast = index == visibleItems.length - 1 && visibleItems.length == filteredItems.length;
+                    return _buildTimelineItem(item, isFirst, isLast, isDark, theme);
+                  },
                 ),
+                if (filteredItems.length > 5)
+                  _showMoreButton(
+                    _showAllTimeline ? 'SHOW LESS' : 'SHOW ALL HISTORY',
+                    () => setState(() => _showAllTimeline = !_showAllTimeline),
+                    isDark,
+                    theme,
+                  ),
+              ],
             ],
           ),
         );
@@ -415,195 +833,151 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
     );
   }
 
-  Widget _feedingTile(FeedingLog log, bool isDark, ThemeData theme) {
-    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
-      ),
+  Widget _buildTimelineItem(dynamic item, bool isFirst, bool isLast, bool isDark, ThemeData theme) {
+    // Get date
+    final date = item is ActivityLog ? item.logDate : (item as AnimalNote).createdAt;
+    
+    // Determine type, title, detail, icon, and accent color
+    String type;
+    String title;
+    String? detail;
+    IconData iconData;
+    Color color;
+
+    if (item is AnimalNote) {
+      type = 'note';
+      title = 'Note Added';
+      detail = item.content;
+      iconData = Icons.description;
+      color = Colors.amber;
+    } else {
+      final log = item as ActivityLog;
+      type = log.type;
+      title = log.event;
+      detail = log.detail;
+      switch (type) {
+        case 'feeding':
+          iconData = Icons.restaurant;
+          color = const Color(0xFF2E7D32); // Beautiful forest green
+          break;
+        case 'weight_change':
+          iconData = Icons.scale;
+          color = const Color(0xFF1565C0); // Royal blue
+          break;
+        case 'length_change':
+          iconData = Icons.straighten;
+          color = const Color(0xFF00838F); // Teal
+          break;
+        case 'note':
+          iconData = Icons.description;
+          color = Colors.amber;
+          break;
+        case 'photo':
+          iconData = Icons.photo;
+          color = const Color(0xFFAD1457); // Pink/magenta
+          break;
+        default:
+          iconData = Icons.circle_outlined;
+          color = isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary;
+          break;
+      }
+    }
+
+    final lineColor = isDark ? AppTheme.borderColor.withValues(alpha: 0.3) : AppTheme.lightBorderColor.withValues(alpha: 0.5);
+
+    Widget tileContent = Padding(
+      padding: const EdgeInsets.symmetric(vertical: 0.0, horizontal: 16.0),
       child: Row(
         crossAxisAlignment: CrossAxisAlignment.start,
         children: [
+          // Timeline indicator (Line + Icon Dot)
+          Column(
+            children: [
+              // Top line
+              Container(
+                width: 2,
+                height: 8,
+                color: isFirst ? Colors.transparent : lineColor,
+              ),
+              // Icon Dot
+              Container(
+                width: 28,
+                height: 28,
+                decoration: BoxDecoration(
+                  shape: BoxShape.circle,
+                  color: color.withValues(alpha: 0.15),
+                  border: Border.all(color: color, width: 1.5),
+                ),
+                child: Center(
+                  child: Icon(iconData, size: 14, color: color),
+                ),
+              ),
+              // Bottom line
+              Container(
+                width: 2,
+                height: 28,
+                color: isLast ? Colors.transparent : lineColor,
+              ),
+            ],
+          ),
+          const SizedBox(width: 16),
+          // Content
           Expanded(
             child: Column(
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
-                Text(log.summary,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary)),
-                if (log.supplements.isNotEmpty) ...[
-                  const SizedBox(height: 2),
-                  Text(log.supplements.join(', '),
+                const SizedBox(height: 12), // Align with center of circle (8px top line + 14px center = 22px; 12px height + ~10px half text height = ~22px)
+                Row(
+                  children: [
+                    Expanded(
+                      child: Text(
+                        title,
+                        style: theme.textTheme.bodyMedium?.copyWith(
+                          fontWeight: FontWeight.bold,
+                          color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+                        ),
+                      ),
+                    ),
+                    Text(
+                      _timeAgo(date),
                       style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
+                        color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                      ),
+                    ),
+                  ],
+                ),
+                if (detail != null && detail.isNotEmpty) ...[
+                  const SizedBox(height: 4),
+                  Text(
+                    detail,
+                    style: theme.textTheme.bodySmall?.copyWith(
+                      color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary,
+                    ),
+                  ),
                 ],
               ],
             ),
           ),
-          Text(_timeAgo(log.feedingDate),
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
         ],
       ),
     );
-  }
 
-  Widget _buildHistorySection() {
-    return StreamBuilder<List<ActivityLog>>(
-      stream: _service.watchActivityLogs(_reptile.id!),
-      builder: (context, snapshot) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        final logs = snapshot.data ?? [];
-        final visibleLogs = _showAllActivity ? logs : logs.take(5).toList();
-
-        return DetailSectionCard(
-          title: 'History',
-          onSettings: () {},
-          onAdd: _openAddActivity,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (snapshot.connectionState == ConnectionState.waiting && logs.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (logs.isEmpty)
-                _emptyMessage('No activity logged yet. Tap + to add an entry.', isDark, theme)
-              else
-                ...visibleLogs.map((log) => _activityTile(log, isDark, theme)).toList(),
-              if (logs.length > 5)
-                _showMoreButton(
-                  _showAllActivity ? 'SHOW LESS' : 'SHOW ALL HISTORY',
-                  () => setState(() => _showAllActivity = !_showAllActivity),
-                  isDark, theme,
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _activityTile(ActivityLog log, bool isDark, ThemeData theme) {
-    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    final icon = _activityIcon(log.type);
-    return Container(
-      padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-      decoration: BoxDecoration(
-        border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
-      ),
-      child: Row(
-        crossAxisAlignment: CrossAxisAlignment.start,
-        children: [
-          Icon(icon, size: 14,
-              color: isDark ? AppTheme.textLight : AppTheme.lightTextLight),
-          const SizedBox(width: 10),
-          Expanded(
-            child: Column(
-              crossAxisAlignment: CrossAxisAlignment.start,
-              children: [
-                Text(log.event,
-                    style: theme.textTheme.bodyMedium?.copyWith(
-                        color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary)),
-                if (log.detail != null)
-                  Text(log.detail!,
-                      style: theme.textTheme.bodySmall?.copyWith(
-                          color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary)),
-              ],
-            ),
-          ),
-          Text(_timeAgo(log.logDate),
-              style: theme.textTheme.bodySmall?.copyWith(
-                  color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
-        ],
-      ),
-    );
-  }
-
-  IconData _activityIcon(String type) {
-    switch (type) {
-      case 'feeding': return Icons.restaurant;
-      case 'weight_change': return Icons.scale;
-      case 'length_change': return Icons.straighten;
-      case 'note': return Icons.note;
-      case 'photo': return Icons.photo;
-      default: return Icons.circle_outlined;
+    if (type == 'note' && item is AnimalNote) {
+      return Dismissible(
+        key: Key(item.id ?? item.createdAt.toIso8601String()),
+        direction: DismissDirection.endToStart,
+        background: Container(
+          color: AppTheme.dangerColor.withValues(alpha: 0.15),
+          alignment: Alignment.centerRight,
+          padding: const EdgeInsets.only(right: 16),
+          child: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
+        ),
+        onDismissed: (_) => _service.deleteNote(_reptile.id!, item.id!),
+        child: tileContent,
+      );
     }
-  }
 
-  Widget _buildNotesSection() {
-    return StreamBuilder<List<AnimalNote>>(
-      stream: _service.watchNotes(_reptile.id!),
-      builder: (context, snapshot) {
-        final theme = Theme.of(context);
-        final isDark = theme.brightness == Brightness.dark;
-        final notes = snapshot.data ?? [];
-        final visibleNotes = _showAllNotes ? notes : notes.take(3).toList();
-
-        return DetailSectionCard(
-          title: 'Notes',
-          onAdd: _openAddNote,
-          child: Column(
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              if (snapshot.connectionState == ConnectionState.waiting && notes.isEmpty)
-                const Padding(
-                  padding: EdgeInsets.all(16),
-                  child: Center(child: CircularProgressIndicator()),
-                )
-              else if (notes.isEmpty)
-                _emptyMessage('No notes yet. Tap + to add a note.', isDark, theme)
-              else
-                ...visibleNotes.map((note) => _noteTile(note, isDark, theme)).toList(),
-              if (notes.length > 3)
-                _showMoreButton(
-                  _showAllNotes ? 'SHOW LESS' : 'SHOW ALL NOTES',
-                  () => setState(() => _showAllNotes = !_showAllNotes),
-                  isDark, theme,
-                ),
-            ],
-          ),
-        );
-      },
-    );
-  }
-
-  Widget _noteTile(AnimalNote note, bool isDark, ThemeData theme) {
-    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
-    return Dismissible(
-      key: Key(note.id ?? note.createdAt.toIso8601String()),
-      direction: DismissDirection.endToStart,
-      background: Container(
-        color: AppTheme.dangerColor.withOpacity(0.15),
-        alignment: Alignment.centerRight,
-        padding: const EdgeInsets.only(right: 16),
-        child: const Icon(Icons.delete_outline, color: AppTheme.dangerColor),
-      ),
-      onDismissed: (_) => _service.deleteNote(_reptile.id!, note.id!),
-      child: Container(
-        padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 10),
-        decoration: BoxDecoration(
-          border: Border(bottom: BorderSide(color: borderColor, width: 0.5)),
-        ),
-        child: Row(
-          crossAxisAlignment: CrossAxisAlignment.start,
-          children: [
-            Expanded(
-              child: Text(note.content,
-                  style: theme.textTheme.bodyMedium?.copyWith(
-                      color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary)),
-            ),
-            const SizedBox(width: 12),
-            Text(_timeAgo(note.createdAt),
-                style: theme.textTheme.bodySmall?.copyWith(
-                    color: isDark ? AppTheme.textLight : AppTheme.lightTextLight)),
-          ],
-        ),
-      ),
-    );
+    return tileContent;
   }
 
   Widget _buildPhotosSection() {
@@ -692,6 +1066,111 @@ class _AnimalDetailScreenState extends State<AnimalDetailScreen> {
                 color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor),
           ],
         ),
+      ),
+    );
+  }
+
+  Widget _buildCurrentMeasurementsCard(
+    ThemeData theme,
+    bool isDark,
+    dynamic weight,
+    String weightUnit,
+    dynamic length,
+    String lengthUnit,
+  ) {
+    final cardBg = isDark ? AppTheme.bgSecondary : AppTheme.lightBgPrimary;
+    final borderColor = isDark ? AppTheme.borderColor : AppTheme.lightBorderColor;
+    return Container(
+      width: double.infinity,
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: cardBg,
+        border: Border.all(color: borderColor),
+        borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+      ),
+      child: Column(
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          Row(
+            children: [
+              Icon(Icons.scale_outlined,
+                  color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                  size: 20),
+              const SizedBox(width: 8),
+              Text(
+                'Current Measurements',
+                style: theme.textTheme.titleMedium?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+                ),
+              ),
+            ],
+          ),
+          const SizedBox(height: 16),
+          Row(
+            children: [
+              if (weight != null)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Weight',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$weight $weightUnit',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+              if (weight != null && length != null) const SizedBox(width: 12),
+              if (length != null)
+                Expanded(
+                  child: Container(
+                    padding: const EdgeInsets.all(12),
+                    decoration: BoxDecoration(
+                      color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                      borderRadius: BorderRadius.circular(8),
+                    ),
+                    child: Column(
+                      crossAxisAlignment: CrossAxisAlignment.start,
+                      children: [
+                        Text(
+                          'Length',
+                          style: theme.textTheme.bodySmall?.copyWith(
+                            color: isDark ? AppTheme.textLight : AppTheme.lightTextLight,
+                          ),
+                        ),
+                        const SizedBox(height: 4),
+                        Text(
+                          '$length $lengthUnit',
+                          style: theme.textTheme.titleMedium?.copyWith(
+                            fontWeight: FontWeight.bold,
+                            color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                          ),
+                        ),
+                      ],
+                    ),
+                  ),
+                ),
+            ],
+          ),
+        ],
       ),
     );
   }

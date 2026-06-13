@@ -1,3 +1,4 @@
+import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:flutter_riverpod/flutter_riverpod.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -57,6 +58,17 @@ class BreedingService {
             .toList());
   }
 
+  Stream<BreedingPair?> watchPair(String pairId) {
+    if (_userId.isEmpty) return Stream.value(null);
+    return _breedingCollection
+        .doc(pairId)
+        .snapshots()
+        .map((snapshot) {
+          if (!snapshot.exists || snapshot.data() == null) return null;
+          return BreedingPair.fromFirestore(snapshot.id, snapshot.data()!);
+        });
+  }
+
   Stream<List<ClutchInfo>> watchActiveClutches() {
     if (_userId.isEmpty) return Stream.value([]);
     return _clutchesCollection
@@ -74,9 +86,9 @@ class BreedingService {
     await _clutchesCollection.add(clutch.toFirestore());
   }
 
-  Future<void> recordCopulation(String pairId, List<DateTime> currentDates) async {
-    final now = DateTime.now();
-    final updatedDates = [...currentDates, now];
+  Future<void> recordCopulation(String pairId, List<DateTime> currentDates, {DateTime? date}) async {
+    final lockDate = date ?? DateTime.now();
+    final updatedDates = [...currentDates, lockDate];
     await _breedingCollection.doc(pairId).update({
       'copulationDates': updatedDates.map((d) => Timestamp.fromDate(d)).toList(),
     });
@@ -87,7 +99,7 @@ class BreedingService {
         event: 'Breeding observed',
         detail: 'observed',
         type: 'manual',
-        logDate: now,
+        logDate: lockDate,
       ),
     );
   }
@@ -144,6 +156,48 @@ class BreedingService {
   Future<void> deleteActivityLog(String pairId, String logId) async {
     if (_userId.isEmpty || pairId.isEmpty || logId.isEmpty) return;
     await _breedingCollection.doc(pairId).collection('activity_logs').doc(logId).delete();
+  }
+
+  /// Combined unified stream of both activity logs and notes, sorted in reverse-chronological order.
+  Stream<List<dynamic>> watchUnifiedTimeline(String pairId) {
+    final controller = StreamController<List<dynamic>>();
+    List<ActivityLog> logs = [];
+    List<AnimalNote> notes = [];
+
+    void emit() {
+      final combined = <dynamic>[...logs, ...notes];
+      combined.sort((a, b) {
+        final dateA = a is ActivityLog ? a.logDate : (a as AnimalNote).createdAt;
+        final dateB = b is ActivityLog ? b.logDate : (b as AnimalNote).createdAt;
+        return dateB.compareTo(dateA); // Newest first
+      });
+      if (!controller.isClosed) {
+        controller.add(combined);
+      }
+    }
+
+    final logsSub = watchActivityLogs(pairId).listen(
+      (data) {
+        logs = data;
+        emit();
+      },
+      onError: (err) => controller.addError(err),
+    );
+
+    final notesSub = watchNotes(pairId).listen(
+      (data) {
+        notes = data;
+        emit();
+      },
+      onError: (err) => controller.addError(err),
+    );
+
+    controller.onCancel = () {
+      logsSub.cancel();
+      notesSub.cancel();
+    };
+
+    return controller.stream;
   }
 
   // Breeding Photos Subcollection Methods
