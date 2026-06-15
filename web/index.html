@@ -33,8 +33,100 @@
   </script>
   <!-- This script adds the flutter initialization JS code -->
   <script src="flutter.js" defer></script>
+
+  <style>
+    body {
+      background-color: #1A1A1A;
+      margin: 0;
+      padding: 0;
+      overflow: hidden;
+    }
+    #splash-screen {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100vw;
+      height: 100vh;
+      background-color: #1A1A1A;
+      z-index: 99999;
+      opacity: 1;
+      transition: opacity 0.4s ease-in-out;
+    }
+    .logo-container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+      display: flex;
+      flex-direction: column;
+      justify-content: center;
+      align-items: center;
+      overflow: hidden;
+    }
+    .logo {
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+      animation: pulse 3s infinite ease-in-out;
+    }
+    .loader-bar-container {
+      position: absolute;
+      bottom: 15%;
+      width: 200px;
+      height: 4px;
+      background-color: rgba(44, 44, 44, 0.8);
+      border-radius: 2px;
+      overflow: hidden;
+      box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
+      z-index: 2;
+    }
+    .loader-bar {
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(90deg, #00FF00, #00D4FF);
+      transform: translateX(-100%);
+      animation: loading 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
+    }
+    @keyframes pulse {
+      0%, 100% {
+        transform: scale(1.0);
+      }
+      50% {
+        transform: scale(1.02);
+      }
+    }
+    @keyframes loading {
+      0% {
+        transform: translateX(-100%);
+      }
+      50% {
+        transform: translateX(0%);
+      }
+      100% {
+        transform: translateX(100%);
+      }
+    }
+    #splash-screen.hidden {
+      opacity: 0;
+      pointer-events: none;
+    }
+  </style>
 </head>
 <body>
+  <div id="splash-screen">
+    <div class="logo-container">
+      <picture>
+        <source srcset="scaleSyncProLogo_mobile.png" media="(max-width: 767px)">
+        <img class="logo" src="scaleSyncProLogo_desktop.png" alt="ScaleSync Pro Logo" />
+      </picture>
+      <div class="loader-bar-container">
+        <div class="loader-bar"></div>
+      </div>
+    </div>
+  </div>
+
   <script>
     window.addEventListener('load', function(ev) {
       // Download main.dart.js
@@ -43,8 +135,19 @@
           serviceWorkerVersion: serviceWorkerVersion,
         },
         onEntrypointLoaded: function(engineInitializer) {
-          engineInitializer.initializeEngine().then(function(appRunner) {
-            appRunner.runApp();
+          engineInitializer.initializeEngine({
+            renderer: "html"
+          }).then(function(appRunner) {
+            appRunner.runApp().then(function() {
+              // Smoothly transition and hide splash screen once Flutter has run
+              const splash = document.getElementById('splash-screen');
+              if (splash) {
+                splash.classList.add('hidden');
+                setTimeout(function() {
+                  splash.remove();
+                }, 400); // Matches CSS transition duration
+              }
+            });
           });
         }
       });
