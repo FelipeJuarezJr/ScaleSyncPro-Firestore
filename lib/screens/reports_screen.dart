@@ -49,7 +49,7 @@ class ReportsScreen extends StatelessWidget {
                   ),
                   const SizedBox(height: 8),
                   Text(
-                    'View reports and analytics here.',
+                    'View reports and analytics here. Coming Soon!',
                     style: Theme.of(context).textTheme.bodyMedium,
                     textAlign: TextAlign.center,
                   ),

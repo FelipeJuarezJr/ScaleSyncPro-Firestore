@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:flutter/foundation.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'package:flutter_riverpod/flutter_riverpod.dart';
 import '../utils/theme.dart';
 import '../widgets/stat_card.dart';
 import '../widgets/activity_item.dart';
@@ -11,16 +12,36 @@ import '../widgets/animal_detail/add_feeding_modal.dart';
 import '../services/reptile_service.dart';
 import 'package:scalesyncpro_firestore/widgets/add_task_modal.dart';
 
+import '../features/pro/views/breeding_room_view.dart';
+import '../models/task_schedule.dart';
+import '../models/reptile.dart';
+import '../services/task_schedule_service.dart';
+import '../utils/task_utils.dart';
+import '../models/expense.dart';
+import '../services/expense_service.dart';
 
 
-class DashboardScreen extends StatefulWidget {
+final reptilesStreamProvider = StreamProvider.autoDispose<List<Reptile>>((ref) {
+  return ReptileService().watchReptiles();
+});
+
+final taskSchedulesStreamProvider = StreamProvider.autoDispose<List<TaskSchedule>>((ref) {
+  return TaskScheduleService().watchSchedules();
+});
+
+final expensesStreamProvider = StreamProvider.autoDispose<List<Expense>>((ref) {
+  return ExpenseService().watchExpenses();
+});
+
+
+class DashboardScreen extends ConsumerStatefulWidget {
   const DashboardScreen({super.key});
 
   @override
-  State<DashboardScreen> createState() => _DashboardScreenState();
+  ConsumerState<DashboardScreen> createState() => _DashboardScreenState();
 }
 
-class _DashboardScreenState extends State<DashboardScreen> {
+class _DashboardScreenState extends ConsumerState<DashboardScreen> {
   @override
   Widget build(BuildContext context) {
     final screenHeight = MediaQuery.of(context).size.height;
@@ -28,15 +49,176 @@ class _DashboardScreenState extends State<DashboardScreen> {
     final isMobile = screenWidth <= 768;
     final isWeb = kIsWeb;
     final bottomPadding = MediaQuery.of(context).padding.bottom;
+
+    final reptilesAsync = ref.watch(reptilesStreamProvider);
+    final pairingsAsync = ref.watch(activePairingsProvider);
+    final clutchesAsync = ref.watch(activeClutchesProvider);
+    final schedulesAsync = ref.watch(taskSchedulesStreamProvider);
+    final expensesAsync = ref.watch(expensesStreamProvider);
+
+
+    final totalReptiles = reptilesAsync.when(
+      data: (list) => list.length.toString(),
+      error: (_, __) => '0',
+      loading: () => '...',
+    );
+
+    final now = DateTime.now();
+    final reptiles = reptilesAsync.valueOrNull ?? [];
+    final addedThisMonth = reptiles.where((r) => r.createdAt.year == now.year && r.createdAt.month == now.month).length;
+    final totalReptilesChange = reptilesAsync.when(
+      data: (_) => '+$addedThisMonth this month',
+      error: (_, __) => 'Error',
+      loading: () => 'Loading...',
+    );
+
+    final activeBreeding = pairingsAsync.when(
+      data: (list) => list.length.toString(),
+      error: (_, __) => '0',
+      loading: () => '...',
+    );
+
+    final clutches = clutchesAsync.valueOrNull ?? [];
+    final activeBreedingChange = clutchesAsync.when(
+      data: (_) => '${clutches.length} clutches expected',
+      error: (_, __) => 'Error',
+      loading: () => 'Loading...',
+    );
+
+    final schedules = schedulesAsync.valueOrNull ?? [];
+    final todayTasksCount = calculateTodayTasks(schedules, reptiles);
+    final todayTasks = schedulesAsync.when(
+      data: (_) => todayTasksCount.toString(),
+      error: (_, __) => '0',
+      loading: () => '...',
+    );
+
+    final needingAttentionCount = reptiles.where((reptile) {
+      if (reptile.lastFeeding != null) {
+        final daysSinceFeeding = now.difference(reptile.lastFeeding!).inDays;
+        if (daysSinceFeeding > 7) return true;
+      }
+      if (reptile.lastHealthCheck != null) {
+        final daysSinceHealthCheck = now.difference(reptile.lastHealthCheck!).inDays;
+        if (daysSinceHealthCheck > 30) return true;
+      }
+      return false;
+    }).length;
+
+    final todayTasksChange = reptilesAsync.when(
+      data: (_) => '$needingAttentionCount overdue',
+      error: (_, __) => 'Error',
+      loading: () => 'Loading...',
+    );
+
+    final monthlyCosts = expensesAsync.when(
+      data: (list) {
+        final currentMonthExpenses = list.where((e) => e.date.year == now.year && e.date.month == now.month).toList();
+        final total = currentMonthExpenses.fold<double>(0.0, (sum, e) => sum + e.cost);
+        return '\$${total.toStringAsFixed(2)}';
+      },
+      error: (_, __) => '\$0.00',
+      loading: () => '...',
+    );
+
+    final monthlyCostsChange = expensesAsync.when(
+      data: (list) {
+        final currentMonthExpenses = list.where((e) => e.date.year == now.year && e.date.month == now.month).toList();
+        final currentTotal = currentMonthExpenses.fold<double>(0.0, (sum, e) => sum + e.cost);
+        
+        final lastMonth = now.month == 1 ? 12 : now.month - 1;
+        final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
+        final lastMonthExpenses = list.where((e) => e.date.year == lastMonthYear && e.date.month == lastMonth).toList();
+        final lastTotal = lastMonthExpenses.fold<double>(0.0, (sum, e) => sum + e.cost);
+        
+        final diff = currentTotal - lastTotal;
+        if (diff > 0) {
+          return '+\$${diff.toStringAsFixed(2)} vs last month';
+        } else if (diff < 0) {
+          return '-\$${(-diff).toStringAsFixed(2)} vs last month';
+        } else {
+          return 'Same as last month';
+        }
+      },
+      error: (_, __) => 'Error',
+      loading: () => 'Loading...',
+    );
+
+    final bool? monthlyCostsPositive = expensesAsync.when(
+      data: (list) {
+        final currentMonthExpenses = list.where((e) => e.date.year == now.year && e.date.month == now.month).toList();
+        final currentTotal = currentMonthExpenses.fold<double>(0.0, (sum, e) => sum + e.cost);
+        
+        final lastMonth = now.month == 1 ? 12 : now.month - 1;
+        final lastMonthYear = now.month == 1 ? now.year - 1 : now.year;
+        final lastMonthExpenses = list.where((e) => e.date.year == lastMonthYear && e.date.month == lastMonth).toList();
+        final lastTotal = lastMonthExpenses.fold<double>(0.0, (sum, e) => sum + e.cost);
+        
+        final diff = currentTotal - lastTotal;
+        if (diff > 0) {
+          return false; // cost increase is negative for the business
+        } else if (diff < 0) {
+          return true; // cost decrease is positive for the business
+        } else {
+          return null; // neutral
+        }
+      },
+      error: (_, __) => null,
+      loading: () => null,
+    );
+
     
     return Scaffold(
       body: isWeb 
-        ? _buildWebLayout(context)
-        : _buildMobileLayout(screenHeight, screenWidth, isMobile, bottomPadding),
+        ? _buildWebLayout(
+            context,
+            totalReptiles: totalReptiles,
+            totalReptilesChange: totalReptilesChange,
+            totalReptilesPositive: addedThisMonth > 0 ? true : null,
+            activeBreeding: activeBreeding,
+            activeBreedingChange: activeBreedingChange,
+            todayTasks: todayTasks,
+            todayTasksChange: todayTasksChange,
+            todayTasksPositive: needingAttentionCount > 0 ? false : null,
+            monthlyCosts: monthlyCosts,
+            monthlyCostsChange: monthlyCostsChange,
+            monthlyCostsPositive: monthlyCostsPositive,
+          )
+        : _buildMobileLayout(
+            screenHeight,
+            screenWidth,
+            isMobile,
+            bottomPadding,
+            totalReptiles: totalReptiles,
+            totalReptilesChange: totalReptilesChange,
+            totalReptilesPositive: addedThisMonth > 0 ? true : null,
+            activeBreeding: activeBreeding,
+            activeBreedingChange: activeBreedingChange,
+            todayTasks: todayTasks,
+            todayTasksChange: todayTasksChange,
+            todayTasksPositive: needingAttentionCount > 0 ? false : null,
+            monthlyCosts: monthlyCosts,
+            monthlyCostsChange: monthlyCostsChange,
+            monthlyCostsPositive: monthlyCostsPositive,
+
+          ),
     );
   }
 
-  Widget _buildWebLayout(BuildContext context) {
+  Widget _buildWebLayout(
+    BuildContext context, {
+    required String totalReptiles,
+    required String totalReptilesChange,
+    required bool? totalReptilesPositive,
+    required String activeBreeding,
+    required String activeBreedingChange,
+    required String todayTasks,
+    required String todayTasksChange,
+    required bool? todayTasksPositive,
+    required String monthlyCosts,
+    required String monthlyCostsChange,
+    required bool? monthlyCostsPositive,
+  }) {
     final screenWidth = MediaQuery.of(context).size.width;
     final isMobileBrowser = screenWidth <= 768;
     
@@ -71,34 +253,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
                     : (screenWidth <= 1800
                         ? 2.2 // medium: cells ~110px at 1050px, content needs ~100px
                         : 3.04)),
-            children: const [
+            children: [
               StatCard(
                 icon: Icons.drag_indicator,
                 title: 'Total Reptiles',
-                value: '47',
-                change: '+3 this month',
-                isPositive: true,
+                value: totalReptiles,
+                change: totalReptilesChange,
+                isPositive: totalReptilesPositive,
               ),
               StatCard(
                 icon: Icons.science,
                 title: 'Active Breeding',
-                value: '8',
-                change: '2 clutches expected',
+                value: activeBreeding,
+                change: activeBreedingChange,
                 isPositive: null,
               ),
               StatCard(
                 icon: Icons.check_circle,
                 title: 'Today\'s Tasks',
-                value: '12',
-                change: '3 overdue',
-                isPositive: null,
+                value: todayTasks,
+                change: todayTasksChange,
+                isPositive: todayTasksPositive,
               ),
               StatCard(
                 icon: Icons.attach_money,
                 title: 'Monthly Costs',
-                value: '284',
-                change: '+\$45 vs last month',
-                isPositive: false,
+                value: monthlyCosts,
+                change: monthlyCostsChange,
+                isPositive: monthlyCostsPositive,
               ),
             ],
           ),
@@ -322,7 +504,23 @@ class _DashboardScreenState extends State<DashboardScreen> {
     );
   }
 
-  Widget _buildMobileLayout(double screenHeight, double screenWidth, bool isMobile, double bottomPadding) {
+  Widget _buildMobileLayout(
+    double screenHeight,
+    double screenWidth,
+    bool isMobile,
+    double bottomPadding, {
+    required String totalReptiles,
+    required String totalReptilesChange,
+    required bool? totalReptilesPositive,
+    required String activeBreeding,
+    required String activeBreedingChange,
+    required String todayTasks,
+    required String todayTasksChange,
+    required bool? todayTasksPositive,
+    required String monthlyCosts,
+    required String monthlyCostsChange,
+    required bool? monthlyCostsPositive,
+  }) {
     return SafeArea(
       bottom: true,
       child: SingleChildScrollView(
@@ -355,34 +553,34 @@ class _DashboardScreenState extends State<DashboardScreen> {
               crossAxisSpacing: 16,
               mainAxisSpacing: 16,
               childAspectRatio: 4.0,
-              children: const [
+              children: [
                 StatCard(
                   icon: Icons.drag_indicator,
                   title: 'Total Reptiles',
-                  value: '47',
-                  change: '+3 this month',
-                  isPositive: true,
+                  value: totalReptiles,
+                  change: totalReptilesChange,
+                  isPositive: totalReptilesPositive,
                 ),
                 StatCard(
                   icon: Icons.science,
                   title: 'Active Breeding',
-                  value: '8',
-                  change: '2 clutches expected',
+                  value: activeBreeding,
+                  change: activeBreedingChange,
                   isPositive: null,
                 ),
                 StatCard(
                   icon: Icons.check_circle,
                   title: 'Today\'s Tasks',
-                  value: '12',
-                  change: '3 overdue',
-                  isPositive: null,
+                  value: todayTasks,
+                  change: todayTasksChange,
+                  isPositive: todayTasksPositive,
                 ),
                 StatCard(
                   icon: Icons.attach_money,
                   title: 'Monthly Costs',
-                  value: '284',
-                  change: '+\$45 vs last month',
-                  isPositive: false,
+                  value: monthlyCosts,
+                  change: monthlyCostsChange,
+                  isPositive: monthlyCostsPositive,
                 ),
               ],
             ),
