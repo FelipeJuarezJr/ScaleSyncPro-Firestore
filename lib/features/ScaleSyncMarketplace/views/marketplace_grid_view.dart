@@ -528,7 +528,7 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                         right: 8,
                         top: 8,
                         child: CircleAvatar(
-                          backgroundColor: Colors.black50,
+                          backgroundColor: Colors.black.withOpacity(0.5),
                           child: IconButton(
                             icon: const Icon(Icons.close, color: Colors.white),
                             onPressed: () => Navigator.of(context).pop(),
