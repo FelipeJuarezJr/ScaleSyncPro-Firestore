@@ -4,6 +4,7 @@ import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:intl/intl.dart';
 import 'package:scalesync_pro_ecosystem/utils/theme.dart';
 import 'package:fl_chart/fl_chart.dart';
+import 'market_login_view.dart';
 
 // ==========================================
 // Marketplace Listing Model
@@ -189,44 +190,79 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
   }
 
   Widget _buildHeader(ThemeData theme, bool isDark) {
-    return Column(
+    return Row(
       crossAxisAlignment: CrossAxisAlignment.start,
+      mainAxisAlignment: MainAxisAlignment.spaceBetween,
       children: [
-        Row(
-          children: [
-            Container(
-              width: 10,
-              height: 10,
-              decoration: const BoxDecoration(
-                color: AppTheme.primaryColor,
-                shape: BoxShape.circle,
+        Expanded(
+          child: Column(
+            crossAxisAlignment: CrossAxisAlignment.start,
+            children: [
+              Row(
+                children: [
+                  Container(
+                    width: 10,
+                    height: 10,
+                    decoration: const BoxDecoration(
+                      color: AppTheme.primaryColor,
+                      shape: BoxShape.circle,
+                    ),
+                  ),
+                  const SizedBox(width: 8),
+                  Text(
+                    'GLOBAL STOREFRONT',
+                    style: TextStyle(
+                      fontSize: 11,
+                      fontWeight: FontWeight.bold,
+                      letterSpacing: 1.2,
+                      color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+                    ),
+                  ),
+                ],
               ),
-            ),
-            const SizedBox(width: 8),
-            Text(
-              'GLOBAL STOREFRONT',
-              style: TextStyle(
-                fontSize: 11,
-                fontWeight: FontWeight.bold,
-                letterSpacing: 1.2,
-                color: isDark ? AppTheme.primaryColor : AppTheme.lightPrimaryColor,
+              const SizedBox(height: 6),
+              Text(
+                'ScaleSync Marketplace',
+                style: theme.textTheme.headlineLarge?.copyWith(
+                  fontWeight: FontWeight.bold,
+                  color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+                ),
               ),
-            ),
-          ],
-        ),
-        const SizedBox(height: 6),
-        Text(
-          'ScaleSync Marketplace',
-          style: theme.textTheme.headlineLarge?.copyWith(
-            fontWeight: FontWeight.bold,
-            color: isDark ? AppTheme.textPrimary : AppTheme.lightTextPrimary,
+              const SizedBox(height: 4),
+              Text(
+                'Browse and purchase premium verified genetics from certified breeders.',
+                style: theme.textTheme.bodyMedium?.copyWith(
+                  color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary,
+                ),
+              ),
+            ],
           ),
         ),
-        const SizedBox(height: 4),
-        Text(
-          'Browse and purchase premium verified genetics from certified breeders.',
-          style: theme.textTheme.bodyMedium?.copyWith(
-            color: isDark ? AppTheme.textSecondary : AppTheme.lightTextSecondary,
+        const SizedBox(width: 16),
+        ElevatedButton(
+          onPressed: () {
+            Navigator.push(
+              context,
+              MaterialPageRoute(builder: (context) => const MarketLoginView()),
+            );
+          },
+          style: ElevatedButton.styleFrom(
+            backgroundColor: const Color(0xFF1E1E1E),
+            foregroundColor: AppTheme.primaryColor,
+            elevation: 0,
+            side: const BorderSide(color: Color(0xFF2E2E2E)),
+            shape: RoundedRectangleBorder(
+              borderRadius: BorderRadius.circular(20),
+            ),
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 12),
+          ),
+          child: const Text(
+            '[ SIGN_IN_TO_LIST ]',
+            style: TextStyle(
+              fontSize: 12,
+              fontWeight: FontWeight.bold,
+              letterSpacing: 1,
+            ),
           ),
         ),
       ],

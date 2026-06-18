@@ -95,8 +95,8 @@ service cloud.firestore {
 
     // Public Marketplace Listings
     match /marketplace_listings/{listingId} {
-      // Any authenticated user can browse marketplace listings
-      allow read: if request.auth != null;
+      // Any user (authenticated or anonymous) can browse public marketplace listings
+      allow read: if true;
       
       // Must be authenticated and seller UID must match auth.uid
       allow create: if request.auth != null 

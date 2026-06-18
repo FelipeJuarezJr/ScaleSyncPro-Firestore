@@ -1,5 +1,21 @@
 {
   "projects": {
     "default": "scalesync-pro"
-  }
+  },
+  "targets": {
+    "scalesync-pro": {
+      "hosting": {
+        "pro": [
+          "scalesync-pro"
+        ],
+        "marketplace": [
+          "scalesync-marketplace"
+        ],
+        "social": [
+          "scalesync-social"
+        ]
+      }
+    }
+  },
+  "etags": {}
 }

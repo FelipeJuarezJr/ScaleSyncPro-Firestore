@@ -6,10 +6,12 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'config/firebase_config.dart';
 import 'screens/auth/login_screen.dart';
 import 'screens/main_app_screen.dart';
-import 'widgets/developer_scaffold.dart';
 import 'services/auth_service.dart';
 import 'services/theme_service.dart';
 import 'utils/theme.dart';
+import 'core/network/domain_guard.dart';
+import 'features/ScaleSyncMarketplace/views/marketplace_grid_view.dart';
+import 'features/ScaleSyncSocial/views/social_feed_view.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -46,15 +48,27 @@ class ScaleSyncProApp extends StatelessWidget {
       ],
       child: legacy_provider.Consumer2<AuthService, ThemeService>(
         builder: (context, authService, themeService, child) {
+          Widget getHomeWidget() {
+            final target = DomainGuard.currentTarget;
+            switch (target) {
+              case AppViewTarget.market:
+                return const MarketplaceGridView();
+              case AppViewTarget.social:
+                return const SocialFeedView();
+              case AppViewTarget.pro:
+                return authService.isAuthenticated
+                    ? const MainAppScreen()
+                    : const LoginScreen();
+            }
+          }
+
           return MaterialApp(
             title: 'ScaleSyncPro',
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: authService.isAuthenticated
-                ? const DeveloperScaffold()
-                : const LoginScreen(),
+            home: getHomeWidget(),
           );
         },
       ),
