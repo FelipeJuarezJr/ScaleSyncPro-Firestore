@@ -1,0 +1,633 @@
+<style>/*! tailwindcss v4.3.0 | MIT License | https://tailwindcss.com */
+@layer properties;
+@layer theme, base, components, utilities;
+@layer theme {
+  :root, :host {
+    --font-sans: ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji",
+      "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji";
+    --font-mono: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono",
+      "Courier New", monospace;
+    --spacing: 0.25rem;
+    --container-2xl: 42rem;
+    --text-xs: 11px;
+    --text-xs--line-height: calc(1 / 0.75);
+    --text-sm: 13px;
+    --text-sm--line-height: calc(1.25 / 0.875);
+    --text-base: 15px;
+    --text-base--line-height: calc(1.5 / 1);
+    --text-lg: 18px;
+    --text-lg--line-height: calc(1.75 / 1.125);
+    --text-xl: 21px;
+    --text-xl--line-height: calc(1.75 / 1.25);
+    --text-2xl: 26px;
+    --text-2xl--line-height: calc(2 / 1.5);
+    --text-4xl: 48px;
+    --text-4xl--line-height: calc(2.5 / 2.25);
+    --font-weight-medium: 500;
+    --font-weight-semibold: 600;
+    --font-weight-bold: 700;
+    --tracking-tight: -0.025em;
+    --tracking-wide: 0.025em;
+    --tracking-widest: 0.1em;
+    --leading-tight: 1.25;
+    --leading-relaxed: 1.625;
+    --radius-sm: 4px;
+    --radius-md: 8px;
+    --radius-lg: 12px;
+    --radius-xl: 24px;
+    --default-font-family: var(--font-sans);
+    --default-mono-font-family: var(--font-mono);
+    --color-background: #0e0f0d;
+    --color-foreground: #f0ede6;
+    --color-border: #2a2c27;
+    --color-input: #1a1c17;
+    --color-primary: #a8c84a;
+    --color-primary-foreground: #0e0f0d;
+    --color-secondary: #1e2119;
+    --color-muted: #1e2119;
+    --color-muted-foreground: #7a7d6e;
+    --color-accent: #e07b39;
+    --color-accent-foreground: #0e0f0d;
+    --color-surface: #161810;
+    --font-body: Space Grotesk;
+    --font-headings: Space Grotesk;
+  }
+}
+@layer base {
+  *, ::after, ::before, ::backdrop, ::file-selector-button {
+    box-sizing: border-box;
+    margin: 0;
+    padding: 0;
+    border: 0 solid;
+  }
+  html, :host {
+    line-height: 1.5;
+    -webkit-text-size-adjust: 100%;
+    tab-size: 4;
+    font-family: var(--default-font-family, ui-sans-serif, system-ui, sans-serif, "Apple Color Emoji", "Segoe UI Emoji", "Segoe UI Symbol", "Noto Color Emoji");
+    font-feature-settings: var(--default-font-feature-settings, normal);
+    font-variation-settings: var(--default-font-variation-settings, normal);
+    -webkit-tap-highlight-color: transparent;
+  }
+  hr {
+    height: 0;
+    color: inherit;
+    border-top-width: 1px;
+  }
+  abbr:where([title]) {
+    -webkit-text-decoration: underline dotted;
+    text-decoration: underline dotted;
+  }
+  h1, h2, h3, h4, h5, h6 {
+    font-size: inherit;
+    font-weight: inherit;
+  }
+  a {
+    color: inherit;
+    -webkit-text-decoration: inherit;
+    text-decoration: inherit;
+  }
+  b, strong {
+    font-weight: bolder;
+  }
+  code, kbd, samp, pre {
+    font-family: var(--default-mono-font-family, ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace);
+    font-feature-settings: var(--default-mono-font-feature-settings, normal);
+    font-variation-settings: var(--default-mono-font-variation-settings, normal);
+    font-size: 1em;
+  }
+  small {
+    font-size: 80%;
+  }
+  sub, sup {
+    font-size: 75%;
+    line-height: 0;
+    position: relative;
+    vertical-align: baseline;
+  }
+  sub {
+    bottom: -0.25em;
+  }
+  sup {
+    top: -0.5em;
+  }
+  table {
+    text-indent: 0;
+    border-color: inherit;
+    border-collapse: collapse;
+  }
+  :-moz-focusring {
+    outline: auto;
+  }
+  progress {
+    vertical-align: baseline;
+  }
+  summary {
+    display: list-item;
+  }
+  ol, ul, menu {
+    list-style: none;
+  }
+  img, svg, video, canvas, audio, iframe, embed, object {
+    display: block;
+    vertical-align: middle;
+  }
+  img, video {
+    max-width: 100%;
+    height: auto;
+  }
+  button, input, select, optgroup, textarea, ::file-selector-button {
+    font: inherit;
+    font-feature-settings: inherit;
+    font-variation-settings: inherit;
+    letter-spacing: inherit;
+    color: inherit;
+    border-radius: 0;
+    background-color: transparent;
+    opacity: 1;
+  }
+  :where(select:is([multiple], [size])) optgroup {
+    font-weight: bolder;
+  }
+  :where(select:is([multiple], [size])) optgroup option {
+    padding-inline-start: 20px;
+  }
+  ::file-selector-button {
+    margin-inline-end: 4px;
+  }
+  ::placeholder {
+    opacity: 1;
+  }
+  @supports (not (-webkit-appearance: -apple-pay-button))  or (contain-intrinsic-size: 1px) {
+    ::placeholder {
+      color: currentcolor;
+      @supports (color: color-mix(in lab, red, red)) {
+        color: color-mix(in oklab, currentcolor 50%, transparent);
+      }
+    }
+  }
+  textarea {
+    resize: vertical;
+  }
+  ::-webkit-search-decoration {
+    -webkit-appearance: none;
+  }
+  ::-webkit-date-and-time-value {
+    min-height: 1lh;
+    text-align: inherit;
+  }
+  ::-webkit-datetime-edit {
+    display: inline-flex;
+  }
+  ::-webkit-datetime-edit-fields-wrapper {
+    padding: 0;
+  }
+  ::-webkit-datetime-edit, ::-webkit-datetime-edit-year-field, ::-webkit-datetime-edit-month-field, ::-webkit-datetime-edit-day-field, ::-webkit-datetime-edit-hour-field, ::-webkit-datetime-edit-minute-field, ::-webkit-datetime-edit-second-field, ::-webkit-datetime-edit-millisecond-field, ::-webkit-datetime-edit-meridiem-field {
+    padding-block: 0;
+  }
+  ::-webkit-calendar-picker-indicator {
+    line-height: 1;
+  }
+  :-moz-ui-invalid {
+    box-shadow: none;
+  }
+  button, input:where([type="button"], [type="reset"], [type="submit"]), ::file-selector-button {
+    appearance: button;
+  }
+  ::-webkit-inner-spin-button, ::-webkit-outer-spin-button {
+    height: auto;
+  }
+  [hidden]:where(:not([hidden="until-found"])) {
+    display: none !important;
+  }
+}
+@layer utilities {
+  .absolute {
+    position: absolute;
+  }
+  .relative {
+    position: relative;
+  }
+  .inset-0 {
+    inset: calc(var(--spacing) * 0);
+  }
+  .top-2 {
+    top: calc(var(--spacing) * 2);
+  }
+  .top-3 {
+    top: calc(var(--spacing) * 3);
+  }
+  .right-2 {
+    right: calc(var(--spacing) * 2);
+  }
+  .right-3 {
+    right: calc(var(--spacing) * 3);
+  }
+  .left-2 {
+    left: calc(var(--spacing) * 2);
+  }
+  .left-3 {
+    left: calc(var(--spacing) * 3);
+  }
+  .z-10 {
+    z-index: 10;
+  }
+  .mx-4 {
+    margin-inline: calc(var(--spacing) * 4);
+  }
+  .my-8 {
+    margin-block: calc(var(--spacing) * 8);
+  }
+  .mt-1 {
+    margin-top: calc(var(--spacing) * 1);
+  }
+  .mt-2 {
+    margin-top: calc(var(--spacing) * 2);
+  }
+  .mt-auto {
+    margin-top: auto;
+  }
+  .mb-1 {
+    margin-bottom: calc(var(--spacing) * 1);
+  }
+  .mb-4 {
+    margin-bottom: calc(var(--spacing) * 4);
+  }
+  .mb-5 {
+    margin-bottom: calc(var(--spacing) * 5);
+  }
+  .mb-6 {
+    margin-bottom: calc(var(--spacing) * 6);
+  }
+  .ml-1 {
+    margin-left: calc(var(--spacing) * 1);
+  }
+  .ml-2 {
+    margin-left: calc(var(--spacing) * 2);
+  }
+  .flex {
+    display: flex;
+  }
+  .grid {
+    display: grid;
+  }
+  .h-4 {
+    height: calc(var(--spacing) * 4);
+  }
+  .h-8 {
+    height: calc(var(--spacing) * 8);
+  }
+  .h-9 {
+    height: calc(var(--spacing) * 9);
+  }
+  .h-full {
+    height: 100%;
+  }
+  .min-h-0 {
+    min-height: calc(var(--spacing) * 0);
+  }
+  .w-8 {
+    width: calc(var(--spacing) * 8);
+  }
+  .w-9 {
+    width: calc(var(--spacing) * 9);
+  }
+  .w-72 {
+    width: calc(var(--spacing) * 72);
+  }
+  .w-full {
+    width: 100%;
+  }
+  .w-px {
+    width: 1px;
+  }
+  .max-w-2xl {
+    max-width: var(--container-2xl);
+  }
+  .flex-1 {
+    flex: 1;
+  }
+  .shrink-0 {
+    flex-shrink: 0;
+  }
+  .grid-cols-2 {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .grid-cols-4 {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .flex-col {
+    flex-direction: column;
+  }
+  .flex-wrap {
+    flex-wrap: wrap;
+  }
+  .items-center {
+    align-items: center;
+  }
+  .items-start {
+    align-items: flex-start;
+  }
+  .justify-around {
+    justify-content: space-around;
+  }
+  .justify-between {
+    justify-content: space-between;
+  }
+  .justify-center {
+    justify-content: center;
+  }
+  .gap-1 {
+    gap: calc(var(--spacing) * 1);
+  }
+  .gap-1\.5 {
+    gap: calc(var(--spacing) * 1.5);
+  }
+  .gap-2 {
+    gap: calc(var(--spacing) * 2);
+  }
+  .gap-3 {
+    gap: calc(var(--spacing) * 3);
+  }
+  .gap-4 {
+    gap: calc(var(--spacing) * 4);
+  }
+  .gap-5 {
+    gap: calc(var(--spacing) * 5);
+  }
+  .gap-6 {
+    gap: calc(var(--spacing) * 6);
+  }
+  .gap-10 {
+    gap: calc(var(--spacing) * 10);
+  }
+  .overflow-hidden {
+    overflow: hidden;
+  }
+  .rounded-full {
+    border-radius: calc(infinity * 1px);
+  }
+  .rounded-lg {
+    border-radius: var(--radius-lg);
+  }
+  .rounded-md {
+    border-radius: var(--radius-md);
+  }
+  .rounded-sm {
+    border-radius: var(--radius-sm);
+  }
+  .rounded-xl {
+    border-radius: var(--radius-xl);
+  }
+  .border {
+    border-style: var(--tw-border-style);
+    border-width: 1px;
+  }
+  .border-t {
+    border-top-style: var(--tw-border-style);
+    border-top-width: 1px;
+  }
+  .border-b {
+    border-bottom-style: var(--tw-border-style);
+    border-bottom-width: 1px;
+  }
+  .border-border {
+    border-color: var(--color-border);
+  }
+  .border-primary {
+    border-color: var(--color-primary);
+  }
+  .bg-accent {
+    background-color: var(--color-accent);
+  }
+  .bg-background {
+    background-color: var(--color-background);
+  }
+  .bg-border {
+    background-color: var(--color-border);
+  }
+  .bg-input {
+    background-color: var(--color-input);
+  }
+  .bg-muted {
+    background-color: var(--color-muted);
+  }
+  .bg-primary {
+    background-color: var(--color-primary);
+  }
+  .bg-secondary {
+    background-color: var(--color-secondary);
+  }
+  .bg-surface {
+    background-color: var(--color-surface);
+  }
+  .bg-cover {
+    background-size: cover;
+  }
+  .bg-center {
+    background-position: center;
+  }
+  .p-1 {
+    padding: calc(var(--spacing) * 1);
+  }
+  .p-1\.5 {
+    padding: calc(var(--spacing) * 1.5);
+  }
+  .p-3 {
+    padding: calc(var(--spacing) * 3);
+  }
+  .p-4 {
+    padding: calc(var(--spacing) * 4);
+  }
+  .px-1 {
+    padding-inline: calc(var(--spacing) * 1);
+  }
+  .px-2 {
+    padding-inline: calc(var(--spacing) * 2);
+  }
+  .px-2\.5 {
+    padding-inline: calc(var(--spacing) * 2.5);
+  }
+  .px-3 {
+    padding-inline: calc(var(--spacing) * 3);
+  }
+  .px-4 {
+    padding-inline: calc(var(--spacing) * 4);
+  }
+  .px-5 {
+    padding-inline: calc(var(--spacing) * 5);
+  }
+  .px-6 {
+    padding-inline: calc(var(--spacing) * 6);
+  }
+  .px-10 {
+    padding-inline: calc(var(--spacing) * 10);
+  }
+  .px-16 {
+    padding-inline: calc(var(--spacing) * 16);
+  }
+  .py-0\.5 {
+    padding-block: calc(var(--spacing) * 0.5);
+  }
+  .py-1 {
+    padding-block: calc(var(--spacing) * 1);
+  }
+  .py-1\.5 {
+    padding-block: calc(var(--spacing) * 1.5);
+  }
+  .py-2 {
+    padding-block: calc(var(--spacing) * 2);
+  }
+  .py-2\.5 {
+    padding-block: calc(var(--spacing) * 2.5);
+  }
+  .py-3 {
+    padding-block: calc(var(--spacing) * 3);
+  }
+  .py-4 {
+    padding-block: calc(var(--spacing) * 4);
+  }
+  .py-12 {
+    padding-block: calc(var(--spacing) * 12);
+  }
+  .pt-1\.5 {
+    padding-top: calc(var(--spacing) * 1.5);
+  }
+  .pt-2 {
+    padding-top: calc(var(--spacing) * 2);
+  }
+  .pt-4 {
+    padding-top: calc(var(--spacing) * 4);
+  }
+  .pt-8 {
+    padding-top: calc(var(--spacing) * 8);
+  }
+  .pb-2 {
+    padding-bottom: calc(var(--spacing) * 2);
+  }
+  .pb-3 {
+    padding-bottom: calc(var(--spacing) * 3);
+  }
+  .pb-4 {
+    padding-bottom: calc(var(--spacing) * 4);
+  }
+  .font-body {
+    font-family: var(--font-body);
+  }
+  .font-headings {
+    font-family: var(--font-headings);
+  }
+  .text-2xl {
+    font-size: var(--text-2xl);
+    line-height: var(--tw-leading, var(--text-2xl--line-height));
+  }
+  .text-4xl {
+    font-size: var(--text-4xl);
+    line-height: var(--tw-leading, var(--text-4xl--line-height));
+  }
+  .text-base {
+    font-size: var(--text-base);
+    line-height: var(--tw-leading, var(--text-base--line-height));
+  }
+  .text-lg {
+    font-size: var(--text-lg);
+    line-height: var(--tw-leading, var(--text-lg--line-height));
+  }
+  .text-sm {
+    font-size: var(--text-sm);
+    line-height: var(--tw-leading, var(--text-sm--line-height));
+  }
+  .text-xl {
+    font-size: var(--text-xl);
+    line-height: var(--tw-leading, var(--text-xl--line-height));
+  }
+  .text-xs {
+    font-size: var(--text-xs);
+    line-height: var(--tw-leading, var(--text-xs--line-height));
+  }
+  .leading-relaxed {
+    --tw-leading: var(--leading-relaxed);
+    line-height: var(--leading-relaxed);
+  }
+  .leading-tight {
+    --tw-leading: var(--leading-tight);
+    line-height: var(--leading-tight);
+  }
+  .font-bold {
+    --tw-font-weight: var(--font-weight-bold);
+    font-weight: var(--font-weight-bold);
+  }
+  .font-medium {
+    --tw-font-weight: var(--font-weight-medium);
+    font-weight: var(--font-weight-medium);
+  }
+  .font-semibold {
+    --tw-font-weight: var(--font-weight-semibold);
+    font-weight: var(--font-weight-semibold);
+  }
+  .tracking-tight {
+    --tw-tracking: var(--tracking-tight);
+    letter-spacing: var(--tracking-tight);
+  }
+  .tracking-wide {
+    --tw-tracking: var(--tracking-wide);
+    letter-spacing: var(--tracking-wide);
+  }
+  .tracking-widest {
+    --tw-tracking: var(--tracking-widest);
+    letter-spacing: var(--tracking-widest);
+  }
+  .whitespace-nowrap {
+    white-space: nowrap;
+  }
+  .text-accent-foreground {
+    color: var(--color-accent-foreground);
+  }
+  .text-foreground {
+    color: var(--color-foreground);
+  }
+  .text-muted-foreground {
+    color: var(--color-muted-foreground);
+  }
+  .text-primary {
+    color: var(--color-primary);
+  }
+  .text-primary-foreground {
+    color: var(--color-primary-foreground);
+  }
+  .uppercase {
+    text-transform: uppercase;
+  }
+  .opacity-70 {
+    opacity: 70%;
+  }
+}
+@property --tw-border-style {
+  syntax: "*";
+  inherits: false;
+  initial-value: solid;
+}
+@property --tw-leading {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-font-weight {
+  syntax: "*";
+  inherits: false;
+}
+@property --tw-tracking {
+  syntax: "*";
+  inherits: false;
+}
+@layer properties {
+  @supports ((-webkit-hyphens: none) and (not (margin-trim: inline))) or ((-moz-orient: inline) and (not (color:rgb(from red r g b)))) {
+    *, ::before, ::after, ::backdrop {
+      --tw-border-style: solid;
+      --tw-leading: initial;
+      --tw-font-weight: initial;
+      --tw-tracking: initial;
+    }
+  }
+}
+</style>
+<link rel="preload" as="image" href="/api/flow-image/4%3A3%0Aball%20python%20snake%20coiled%20studio%20photography%20dark%20background%20exotic%20pet"><link rel="preload" as="image" href="/api/flow-image/4%3A3%0Acrested%20gecko%20close%20up%20macro%20portrait%20dark%20moody%20background"><link rel="preload" as="image" href="/api/flow-image/4%3A3%0Ablue%20tongue%20skink%20lizard%20close%20up%20dramatic%20dark%20background"><link rel="preload" as="image" href="/api/flow-image/4%3A3%0Apanther%20chameleon%20colorful%20vibrant%20studio%20dark%20background"><link rel="preload" as="image" href="/api/flow-image/4%3A3%0Asulcata%20tortoise%20large%20shell%20close%20up%20natural%20light%20dark%20background"><link rel="preload" as="image" href="/api/flow-image/4%3A3%0Aleopard%20gecko%20yellow%20orange%20morph%20close%20up%20dark%20background"><div class="bg-background font-body flex flex-col" data-component="@screens/MobileBrowseListings.jsx"><nav class="bg-background border-b border-border px-4 py-3 flex items-center justify-between font-body" data-component="@components/MobileTopNav.jsx"><div class="flex items-center gap-2"><span class="text-primary text-xl">🐍</span><span class="text-foreground font-headings font-bold text-lg tracking-tight"><span data-file="/components/MobileTopNav.jsx" data-idx="0">ScaleMarket</span></span></div><div class="flex items-center gap-3"><button class="w-8 h-8 flex items-center justify-center text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:18px;height:18px" data-icon="search" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6666666666666665"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg></span></button><button class="w-8 h-8 flex items-center justify-center text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:18px;height:18px" data-icon="bell" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="18px" height="18px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.6666666666666665" d="M10.268 21a2 2 0 0 0 3.464 0m-10.47-5.674A1 1 0 0 0 4 17h16a1 1 0 0 0 .74-1.673C19.41 13.956 18 12.499 18 8A6 6 0 0 0 6 8c0 4.499-1.411 5.956-2.738 7.326"></path></svg></span></button><div class="w-8 h-8 rounded-full bg-muted flex items-center justify-center"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:15px;height:15px" data-icon="user" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="15px" height="15px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.2"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></g></svg></span></div></div></nav><div class="px-4 pt-4 pb-2"><div class="flex items-center gap-2 bg-input border border-border rounded-lg px-3 py-2.5"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:14px;height:14px" data-icon="search" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="14px" height="14px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.4285714285714284"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg></span><span class="text-muted-foreground text-sm ml-1"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="0">Search reptiles, morphs, sellers...</span></span></div></div><div class="mx-4 mt-2 rounded-xl overflow-hidden relative" style="height:140px;background-image:url(/api/flow-image/16%3A9%0Aclose%20up%20macro%20photography%20of%20exotic%20reptile%20scales%20texture%20dark%20moody%20green%20amber);background-size:cover;background-position:center"><div class="absolute inset-0" style="background:linear-gradient(90deg, #0e0f0df0 30%, transparent 100%)"></div><div class="relative z-10 flex flex-col justify-center h-full px-5"><p class="text-xs text-primary font-semibold uppercase tracking-widest mb-1"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="1">Live Animals</span></p><h1 class="text-foreground font-headings font-bold text-xl leading-tight"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="2">Find Your</span><br><span class="text-primary"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="3">Exotic Companion</span></span></h1><p class="text-muted-foreground text-xs mt-1"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="4">2,400+ verified listings</span></p></div></div><div class="px-4 pt-4 pb-2 flex items-center gap-2 overflow-hidden flex-wrap"><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-primary text-primary-foreground border-primary" data-media-type="banani-button"><span>✨</span><span>All</span></a><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-surface border-border text-muted-foreground" data-media-type="banani-button"><span>🐍</span><span>Snakes</span></a><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-surface border-border text-muted-foreground" data-media-type="banani-button"><span>🦎</span><span>Geckos</span></a><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-surface border-border text-muted-foreground" data-media-type="banani-button"><span>🦕</span><span>Lizards</span></a><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-surface border-border text-muted-foreground" data-media-type="banani-button"><span>🐢</span><span>Tortoises</span></a><a class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-xs font-medium whitespace-nowrap bg-surface border-border text-muted-foreground" data-media-type="banani-button"><span>🌿</span><span>Chameleons</span></a></div><div class="px-4 pb-3 flex items-center justify-between"><div class="flex items-center gap-2"><div class="flex items-center gap-1.5 bg-input border border-border rounded-md px-2.5 py-1.5 text-xs text-muted-foreground"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="sliders-horizontal" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363" d="M10 5H3m9 14H3M14 3v4m2 10v4m5-9h-9m9 7h-5m5-14h-7m-6 5v4m0-2H3"></path></svg></span><span><span data-file="/screens/MobileBrowseListings.jsx" data-idx="5">Filter</span></span></div><div class="flex items-center gap-1 bg-input border border-border rounded-md px-2.5 py-1.5 text-xs text-muted-foreground"><span><span data-file="/screens/MobileBrowseListings.jsx" data-idx="6">Price</span></span><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="chevron-down" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363" d="m6 9l6 6l6-6"></path></svg></span></div><div class="flex items-center gap-1 bg-input border border-border rounded-md px-2.5 py-1.5 text-xs text-muted-foreground"><span><span data-file="/screens/MobileBrowseListings.jsx" data-idx="7">Verified</span></span><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="chevron-down" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363" d="m6 9l6 6l6-6"></path></svg></span></div></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span><span data-file="/screens/MobileBrowseListings.jsx" data-idx="8">Newest</span></span><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="chevron-down" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363" d="m6 9l6 6l6-6"></path></svg></span></div></div><div class="px-4 pb-2"><p class="text-muted-foreground text-xs"><span data-file="/screens/MobileBrowseListings.jsx" data-idx="9">2,419 animals available</span></p></div><div class="px-4 grid grid-cols-2 gap-3 pb-4"><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="ball python snake coiled studio photography dark background exotic pet" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Aball%20python%20snake%20coiled%20studio%20photography%20dark%20background%20exotic%20pet" class="w-full" data-component="@globalComponents/Image.jsx"><span class="absolute top-2 left-2 bg-accent text-accent-foreground text-xs font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">Featured</span><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Ball Python</p><p class="text-muted-foreground text-xs">Pastel Clown</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$450</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Austin, TX</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="badge-check" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path><path d="m9 12l2 2l4-4"></path></g></svg></span><span>ReptileRanch</span></div></div></div></div><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="crested gecko close up macro portrait dark moody background" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Acrested%20gecko%20close%20up%20macro%20portrait%20dark%20moody%20background" class="w-full" data-component="@globalComponents/Image.jsx"><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Crested Gecko</p><p class="text-muted-foreground text-xs">Flame Pinstripe</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$185</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Portland, OR</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="badge-check" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path><path d="m9 12l2 2l4-4"></path></g></svg></span><span>GeckoGuild</span></div></div></div></div><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="blue tongue skink lizard close up dramatic dark background" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Ablue%20tongue%20skink%20lizard%20close%20up%20dramatic%20dark%20background" class="w-full" data-component="@globalComponents/Image.jsx"><span class="absolute top-2 left-2 bg-accent text-accent-foreground text-xs font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">New</span><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Blue Tongue Skink</p><p class="text-muted-foreground text-xs">Northern BTS</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$320</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Denver, CO</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span>SkinkSource</span></div></div></div></div><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="panther chameleon colorful vibrant studio dark background" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Apanther%20chameleon%20colorful%20vibrant%20studio%20dark%20background" class="w-full" data-component="@globalComponents/Image.jsx"><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Panther Chameleon</p><p class="text-muted-foreground text-xs">Ambilobe</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$780</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Miami, FL</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="badge-check" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path><path d="m9 12l2 2l4-4"></path></g></svg></span><span>ChromaCham</span></div></div></div></div><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="sulcata tortoise large shell close up natural light dark background" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Asulcata%20tortoise%20large%20shell%20close%20up%20natural%20light%20dark%20background" class="w-full" data-component="@globalComponents/Image.jsx"><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Sulcata Tortoise</p><p class="text-muted-foreground text-xs">Standard</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$210</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Phoenix, AZ</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:11px;height:11px" data-icon="badge-check" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="11px" height="11px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.363636363636363"><path d="M3.85 8.62a4 4 0 0 1 4.78-4.77a4 4 0 0 1 6.74 0a4 4 0 0 1 4.78 4.78a4 4 0 0 1 0 6.74a4 4 0 0 1-4.77 4.78a4 4 0 0 1-6.75 0a4 4 0 0 1-4.78-4.77a4 4 0 0 1 0-6.76"></path><path d="m9 12l2 2l4-4"></path></g></svg></span><span>TortoiseTown</span></div></div></div></div><div class="bg-surface border border-border rounded-lg overflow-hidden flex flex-col" data-component="@components/MobileListingCard.jsx"><div class="relative"><img data-query="leopard gecko yellow orange morph close up dark background" data-aspect-ratio="4:3" style="aspect-ratio:4/3;object-fit:cover" src="/api/flow-image/4%3A3%0Aleopard%20gecko%20yellow%20orange%20morph%20close%20up%20dark%20background" class="w-full" data-component="@globalComponents/Image.jsx"><span class="absolute top-2 left-2 bg-accent text-accent-foreground text-xs font-bold px-2 py-0.5 rounded-sm uppercase tracking-wide">Sale</span><button class="absolute top-2 right-2 bg-background bg-opacity-60 rounded-full p-1" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:12px;height:12px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="12px" height="12px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span></button></div><div class="p-3 flex flex-col gap-1.5"><div class="flex items-start justify-between gap-1"><div><p class="text-foreground font-semibold text-sm leading-tight">Leopard Gecko</p><p class="text-muted-foreground text-xs">Tangerine Tremper</p></div><span class="text-primary font-bold text-base whitespace-nowrap">$95</span></div><div class="flex items-center justify-between pt-1.5 border-t border-border"><div class="flex items-center gap-1 text-muted-foreground text-xs"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:10px;height:10px" data-icon="map-pin" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="10px" height="10px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="4.8"><path d="M20 10c0 4.993-5.539 10.193-7.399 11.799a1 1 0 0 1-1.202 0C9.539 20.193 4 14.993 4 10a8 8 0 0 1 16 0"></path><circle cx="12" cy="10" r="3"></circle></g></svg></span><span>Chicago, IL</span></div><div class="flex items-center gap-1 text-xs text-muted-foreground"><span>LeoLair</span></div></div></div></div></div><div class="px-4 pb-4"><a class="w-full border border-border rounded-lg py-3 flex items-center justify-center text-sm text-muted-foreground font-medium gap-2" data-media-type="banani-button"><span><span data-file="/screens/MobileBrowseListings.jsx" data-idx="10">Load more listings</span></span><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:14px;height:14px" data-icon="chevron-down" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="14px" height="14px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="3.4285714285714284" d="m6 9l6 6l6-6"></path></svg></span></a></div><div class="bg-background border-t border-border flex items-center justify-around px-2 py-3 font-body" data-component="@components/MobileBottomNav.jsx"><a class="flex flex-col items-center gap-1 text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:20px;height:20px" data-icon="home" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><path d="M15 21v-8a1 1 0 0 0-1-1h-4a1 1 0 0 0-1 1v8"></path><path d="M3 10a2 2 0 0 1 .709-1.528l7-6a2 2 0 0 1 2.582 0l7 6A2 2 0 0 1 21 10v9a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2z"></path></g></svg></span><span class="text-xs">Home</span></a><a class="flex flex-col items-center gap-1 text-primary" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:20px;height:20px" data-icon="search" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><path d="m21 21l-4.34-4.34"></path><circle cx="11" cy="11" r="8"></circle></g></svg></span><span class="text-xs">Browse</span></a><a class="flex flex-col items-center gap-1 text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:20px;height:20px" data-icon="plus-circle" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><circle cx="12" cy="12" r="10"></circle><path d="M8 12h8m-4-4v8"></path></g></svg></span><span class="text-xs">Sell</span></a><a class="flex flex-col items-center gap-1 text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:20px;height:20px" data-icon="heart" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24"><path fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4" d="M2 9.5a5.5 5.5 0 0 1 9.591-3.676a.56.56 0 0 0 .818 0A5.49 5.49 0 0 1 22 9.5c0 2.29-1.5 4-3 5.5l-5.492 5.313a2 2 0 0 1-3 .019L5 15c-1.5-1.5-3-3.2-3-5.5"></path></svg></span><span class="text-xs">Saved</span></a><a class="flex flex-col items-center gap-1 text-muted-foreground" data-media-type="banani-button"><span class="" style="display:inline-flex;align-items:center;justify-content:center;flex-shrink:0;width:20px;height:20px" data-icon="user" data-component="@globalComponents/Icon.jsx"><svg xmlns="http://www.w3.org/2000/svg" width="20px" height="20px" viewBox="0 0 24 24"><g fill="none" stroke="currentColor" stroke-linecap="round" stroke-linejoin="round" stroke-width="2.4"><path d="M19 21v-2a4 4 0 0 0-4-4H9a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></g></svg></span><span class="text-xs">Profile</span></a></div></div>

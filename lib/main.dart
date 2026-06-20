@@ -69,8 +69,20 @@ class ScaleSyncProApp extends StatelessWidget {
             }
           }
 
+          String getTitle() {
+            final target = DomainGuard.currentTarget;
+            switch (target) {
+              case AppViewTarget.market:
+                return 'ScaleSync Marketplace';
+              case AppViewTarget.social:
+                return 'ScaleSync Social';
+              case AppViewTarget.pro:
+                return 'ScaleSync Pro';
+            }
+          }
+
           return MaterialApp(
-            title: 'ScaleSyncPro',
+            title: getTitle(),
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
