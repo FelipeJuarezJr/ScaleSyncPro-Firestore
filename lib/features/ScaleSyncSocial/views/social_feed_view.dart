@@ -4,6 +4,9 @@ import 'package:scalesync_pro_ecosystem/services/auth_service.dart';
 import 'package:scalesync_pro_ecosystem/services/theme_service.dart';
 import 'package:scalesync_pro_ecosystem/utils/theme.dart';
 import 'package:scalesync_pro_ecosystem/features/ScaleSyncSocial/views/social_login_view.dart';
+import 'dart:io' as io;
+import 'package:flutter/foundation.dart';
+import 'package:image_picker/image_picker.dart';
 
 class SocialFeedView extends StatefulWidget {
   const SocialFeedView({super.key});
@@ -16,7 +19,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
   String _feedFilter = 'All'; // 'All' | 'Media' | 'Text'
   final TextEditingController _broadcastController = TextEditingController();
   final FocusNode _composerFocusNode = FocusNode();
-  final List<String> _myPosts = [];
+  final List<_MorphUpdatePost> _myPosts = [];
+
+  // Desktop Composer Media and Stats Attachment State
+  String? _attachedMediaUrl;
+  bool _isAttachedVideo = false;
+  Map<String, String>? _attachedStats;
+  List<String> _attachedTags = [];
 
   // Likes state tracking
   final Set<int> _likedPostIndices = {};
@@ -33,6 +42,11 @@ class _SocialFeedViewState extends State<SocialFeedView> {
   }
 
   void _showMobilePostSheet(BuildContext context) {
+    String? localMediaUrl;
+    bool localIsVideo = false;
+    Map<String, String>? localStats;
+    List<String> localTags = [];
+
     showModalBottomSheet(
       context: context,
       isScrollControlled: true,
@@ -41,77 +55,171 @@ class _SocialFeedViewState extends State<SocialFeedView> {
         borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
       ),
       builder: (context) {
-        return Padding(
-          padding: EdgeInsets.only(
-            bottom: MediaQuery.of(context).viewInsets.bottom,
-            top: 20,
-            left: 16,
-            right: 16,
-          ),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              Row(
-                mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                children: [
-                  const Text(
-                    'Create Broadcast',
-                    style: TextStyle(
-                      color: Colors.white,
-                      fontSize: 16,
-                      fontWeight: FontWeight.bold,
+        return StatefulBuilder(
+          builder: (BuildContext context, StateSetter setModalState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+                top: 20,
+                left: 16,
+                right: 16,
+              ),
+              child: SingleChildScrollView(
+                child: Column(
+                  mainAxisSize: MainAxisSize.min,
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: [
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: [
+                        const Text(
+                          'Create Broadcast',
+                          style: TextStyle(
+                            color: Colors.white,
+                            fontSize: 16,
+                            fontWeight: FontWeight.bold,
+                          ),
+                        ),
+                        IconButton(
+                          icon: const Icon(Icons.close, color: Colors.white),
+                          onPressed: () => Navigator.pop(context),
+                        ),
+                      ],
                     ),
-                  ),
-                  IconButton(
-                    icon: const Icon(Icons.close, color: Colors.white),
-                    onPressed: () => Navigator.pop(context),
-                  ),
-                ],
-              ),
-              const SizedBox(height: 12),
-              TextField(
-                controller: _broadcastController,
-                maxLines: 4,
-                autofocus: true,
-                style: const TextStyle(color: Colors.white, fontSize: 14),
-                decoration: const InputDecoration(
-                  hintText: "What's happening in your terrarium?",
-                  hintStyle: TextStyle(color: AppTheme.textLight, fontSize: 14),
-                  fillColor: Colors.transparent,
-                  filled: true,
-                  border: InputBorder.none,
-                  enabledBorder: InputBorder.none,
-                  focusedBorder: InputBorder.none,
-                ),
-              ),
-              const SizedBox(height: 16),
-              Row(
-                mainAxisAlignment: MainAxisAlignment.end,
-                children: [
-                  ElevatedButton(
-                    onPressed: () {
-                      if (_broadcastController.text.trim().isEmpty) return;
-                      setState(() {
-                        _myPosts.insert(0, _broadcastController.text.trim());
-                        _broadcastController.clear();
-                      });
-                      Navigator.pop(context);
-                    },
-                    style: ElevatedButton.styleFrom(
-                      backgroundColor: AppTheme.primaryColor,
-                      foregroundColor: Colors.black,
-                      shape: RoundedRectangleBorder(
-                        borderRadius: BorderRadius.circular(20),
+                    const SizedBox(height: 12),
+                    TextField(
+                      controller: _broadcastController,
+                      maxLines: 4,
+                      autofocus: true,
+                      style: const TextStyle(color: Colors.white, fontSize: 14),
+                      decoration: const InputDecoration(
+                        hintText: "What's happening in your herpetarium?",
+                        hintStyle: TextStyle(color: AppTheme.textLight, fontSize: 14),
+                        fillColor: Colors.transparent,
+                        filled: true,
+                        border: InputBorder.none,
+                        enabledBorder: InputBorder.none,
+                        focusedBorder: InputBorder.none,
                       ),
                     ),
-                    child: const Text('Publish'),
-                  ),
-                ],
+                    
+                    // Attachment preview inside mobile sheet
+                    _ComposerAttachmentPreview(
+                      mediaUrl: localMediaUrl,
+                      isVideo: localIsVideo,
+                      stats: localStats,
+                      tags: localTags,
+                      onRemoveMedia: () {
+                        setModalState(() {
+                          localMediaUrl = null;
+                          localIsVideo = false;
+                        });
+                      },
+                      onRemoveStats: () {
+                        setModalState(() {
+                          localStats = null;
+                        });
+                      },
+                      onRemoveTag: (tag) {
+                        setModalState(() {
+                          localTags.remove(tag);
+                        });
+                      },
+                    ),
+                    
+                    const SizedBox(height: 16),
+                    const Divider(color: Color(0xFF333333), height: 1),
+                    const SizedBox(height: 12),
+                    Wrap(
+                      spacing: 12,
+                      runSpacing: 12,
+                      crossAxisAlignment: WrapCrossAlignment.center,
+                      children: [
+                        _buildComposerAction(Icons.image_outlined, 'Photo', () {
+                          _showAddPhotoDialog(context, (url) {
+                            setModalState(() {
+                              localMediaUrl = url;
+                              localIsVideo = false;
+                            });
+                          });
+                        }),
+                        _buildComposerAction(Icons.videocam_outlined, 'Video', () {
+                          _showAddVideoDialog(context, (url) {
+                            setModalState(() {
+                              localMediaUrl = url;
+                              localIsVideo = true;
+                            });
+                          });
+                        }),
+                        _buildComposerAction(Icons.thermostat_outlined, 'Stats', () {
+                          _showAddStatsDialog(context, (statsMap) {
+                            setModalState(() {
+                              localStats = statsMap;
+                            });
+                          });
+                        }),
+                        _buildComposerAction(Icons.local_offer_outlined, 'Tags', () {
+                          _showAddTagDialog(context, (tag) {
+                            if (!localTags.contains(tag)) {
+                              setModalState(() {
+                                localTags.add(tag);
+                              });
+                            }
+                          });
+                        }),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.end,
+                      children: [
+                        ElevatedButton(
+                          onPressed: () {
+                            if (_broadcastController.text.trim().isEmpty) return;
+                            
+                            final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+                            final userName = authService.currentUser?.email?.split('@').first ?? 'You';
+                            
+                            final newPost = _MorphUpdatePost(
+                              breederName: userName,
+                              avatarText: userName.substring(0, 1).toUpperCase(),
+                              timeAgo: 'Just now',
+                              subtitle: 'Broadcast Node',
+                              morphTitle: 'Broadcast Update',
+                              morphContent: _broadcastController.text.trim(),
+                              morphTags: localTags.isNotEmpty ? localTags : ['Broadcast', 'LiveFeed'],
+                              likes: 0,
+                              comments: 0,
+                              shares: 0,
+                              hasMedia: localMediaUrl != null,
+                              mediaUrl: localMediaUrl,
+                              isVideo: localIsVideo,
+                              stats: localStats,
+                            );
+
+                            setState(() {
+                              _myPosts.insert(0, newPost);
+                              _broadcastController.clear();
+                            });
+                            Navigator.pop(context);
+                          },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: AppTheme.primaryColor,
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(20),
+                            ),
+                          ),
+                          child: const Text('Publish'),
+                        ),
+                      ],
+                    ),
+                    const SizedBox(height: 16),
+                  ],
+                ),
               ),
-              const SizedBox(height: 16),
-            ],
-          ),
+            );
+          },
         );
       },
     );
@@ -183,23 +291,7 @@ class _SocialFeedViewState extends State<SocialFeedView> {
     final List<_MorphUpdatePost> allPosts = [];
     
     // Add user's custom posts first
-    for (int i = 0; i < _myPosts.length; i++) {
-      allPosts.add(
-        _MorphUpdatePost(
-          breederName: authService.currentUser?.email?.split('@').first ?? 'You',
-          avatarText: 'U',
-          timeAgo: 'Just now',
-          subtitle: 'Broadcast Node',
-          morphTitle: 'Broadcast Update',
-          morphContent: _myPosts[i],
-          morphTags: ['Broadcast', 'LiveFeed'],
-          likes: 0,
-          comments: 0,
-          shares: 0,
-          hasMedia: false,
-        ),
-      );
-    }
+    allPosts.addAll(_myPosts);
     
     allPosts.addAll(mockUpdates);
 
@@ -346,6 +438,7 @@ class _SocialFeedViewState extends State<SocialFeedView> {
 
   // --- Column 2: Feed Column ---
   Widget _buildFeedColumn(List<_MorphUpdatePost> posts, bool isMobile) {
+    final authService = legacy_provider.Provider.of<AuthService>(context);
     return Padding(
       padding: const EdgeInsets.symmetric(horizontal: 16.0),
       child: Column(
@@ -357,7 +450,7 @@ class _SocialFeedViewState extends State<SocialFeedView> {
             mainAxisAlignment: MainAxisAlignment.spaceBetween,
             children: [
               const Text(
-                'Terrarium Feed',
+                'Herpetarium Feed',
                 style: TextStyle(
                   color: Colors.white,
                   fontSize: 18,
@@ -411,11 +504,84 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                       child: _PostComposerCard(
                         controller: _broadcastController,
                         focusNode: _composerFocusNode,
+                        mediaUrl: _attachedMediaUrl,
+                        isVideo: _isAttachedVideo,
+                        stats: _attachedStats,
+                        tags: _attachedTags,
+                        onAddPhoto: () {
+                          _showAddPhotoDialog(context, (url) {
+                            setState(() {
+                              _attachedMediaUrl = url;
+                              _isAttachedVideo = false;
+                            });
+                          });
+                        },
+                        onAddVideo: () {
+                          _showAddVideoDialog(context, (url) {
+                            setState(() {
+                              _attachedMediaUrl = url;
+                              _isAttachedVideo = true;
+                            });
+                          });
+                        },
+                        onAddStats: () {
+                          _showAddStatsDialog(context, (statsMap) {
+                            setState(() {
+                              _attachedStats = statsMap;
+                            });
+                          });
+                        },
+                        onAddTag: () {
+                          _showAddTagDialog(context, (tag) {
+                            if (!_attachedTags.contains(tag)) {
+                              setState(() {
+                                _attachedTags.add(tag);
+                              });
+                            }
+                          });
+                        },
+                        onRemoveMedia: () {
+                          setState(() {
+                            _attachedMediaUrl = null;
+                            _isAttachedVideo = false;
+                          });
+                        },
+                        onRemoveStats: () {
+                          setState(() {
+                            _attachedStats = null;
+                          });
+                        },
+                        onRemoveTag: (tag) {
+                          setState(() {
+                            _attachedTags.remove(tag);
+                          });
+                        },
                         onPublish: () {
                           if (_broadcastController.text.trim().isEmpty) return;
+                          final userName = authService.currentUser?.email?.split('@').first ?? 'You';
+                          final newPost = _MorphUpdatePost(
+                            breederName: userName,
+                            avatarText: userName.substring(0, 1).toUpperCase(),
+                            timeAgo: 'Just now',
+                            subtitle: 'Broadcast Node',
+                            morphTitle: 'Broadcast Update',
+                            morphContent: _broadcastController.text.trim(),
+                            morphTags: _attachedTags.isNotEmpty ? List.from(_attachedTags) : ['Broadcast', 'LiveFeed'],
+                            likes: 0,
+                            comments: 0,
+                            shares: 0,
+                            hasMedia: _attachedMediaUrl != null,
+                            mediaUrl: _attachedMediaUrl,
+                            isVideo: _isAttachedVideo,
+                            stats: _attachedStats != null ? Map.from(_attachedStats!) : null,
+                          );
                           setState(() {
-                            _myPosts.insert(0, _broadcastController.text.trim());
+                            _myPosts.insert(0, newPost);
                             _broadcastController.clear();
+                            _attachedMediaUrl = null;
+                            _isAttachedVideo = false;
+                            _attachedStats = null;
+                            _attachedTags = [];
                           });
                         },
                         avatarUrl: 'https://lh3.googleusercontent.com/aida-public/AB6AXuDvfta9v30KVAVz2SlBVXmJPSQ_8oU-K-vzRn58YYbuuLeywC-MDkfuoh4M23GoYae2UukM2_M3ht8-lSHWBf4CwCEIyIRS2Nns8-LuqClcmmzU8FZ_x0LJxzvK_jv3Hzoq5wT73s2Eed8KWeZ-wpTXyTnpQd2anMmRS71HAyXAQy7Ezk8ph4QkYog5xlWJSaAyG8GCXpvWSv-FWarDXpUNVg0iMMwDTWYNaHLVCNfHcYOJ_-mtUl9bUb80xxSVQixen1dKjUCmYBQ',
@@ -645,7 +811,7 @@ class _RightSidebarState extends State<_RightSidebar> {
           const SizedBox(height: 14),
           _buildTrendingItem('Species Spotlight', '#LeopardGeckoCare', '2.4k posts this week'),
           _buildTrendingItem('Genetics', '#BallPythonMorphs', '1.8k posts this week'),
-          _buildTrendingItem('Bioactive', '#TerrariumDesign', '940 posts this week'),
+          _buildTrendingItem('Bioactive', '#HerpetariumDesign', '940 posts this week'),
           _buildTrendingItem('Conservation', '#AustralianAgamids', '520 posts this week'),
           const SizedBox(height: 4),
           TextButton(
@@ -925,11 +1091,35 @@ class _PostComposerCard extends StatelessWidget {
   final VoidCallback onPublish;
   final String? avatarUrl;
 
+  // Attachment states
+  final String? mediaUrl;
+  final bool isVideo;
+  final Map<String, String>? stats;
+  final List<String> tags;
+  final VoidCallback onAddPhoto;
+  final VoidCallback onAddVideo;
+  final VoidCallback onAddStats;
+  final VoidCallback onAddTag;
+  final VoidCallback onRemoveMedia;
+  final VoidCallback onRemoveStats;
+  final Function(String) onRemoveTag;
+
   const _PostComposerCard({
     required this.controller,
     required this.focusNode,
     required this.onPublish,
     this.avatarUrl,
+    this.mediaUrl,
+    required this.isVideo,
+    this.stats,
+    required this.tags,
+    required this.onAddPhoto,
+    required this.onAddVideo,
+    required this.onAddStats,
+    required this.onAddTag,
+    required this.onRemoveMedia,
+    required this.onRemoveStats,
+    required this.onRemoveTag,
   });
 
   @override
@@ -981,7 +1171,7 @@ class _PostComposerCard extends StatelessWidget {
                   minLines: 3,
                   style: const TextStyle(color: Colors.white, fontSize: 13),
                   decoration: const InputDecoration(
-                    hintText: "What's happening in your terrarium?",
+                    hintText: "What's happening in your herpetarium?",
                     hintStyle: TextStyle(color: AppTheme.textLight, fontSize: 13),
                     fillColor: Colors.transparent,
                     filled: true,
@@ -991,16 +1181,28 @@ class _PostComposerCard extends StatelessWidget {
                     focusedBorder: InputBorder.none,
                   ),
                 ),
+                // Attachment preview inside desktop composer
+                _ComposerAttachmentPreview(
+                  mediaUrl: mediaUrl,
+                  isVideo: isVideo,
+                  stats: stats,
+                  tags: tags,
+                  onRemoveMedia: onRemoveMedia,
+                  onRemoveStats: onRemoveStats,
+                  onRemoveTag: onRemoveTag,
+                ),
                 const SizedBox(height: 12),
                 const Divider(color: Color(0xFF333333), height: 1),
                 const SizedBox(height: 12),
                 Row(
                   children: [
-                    _buildComposerAction(Icons.image_outlined, 'Photo'),
+                    _buildComposerAction(Icons.image_outlined, 'Photo', onAddPhoto),
                     const SizedBox(width: 12),
-                    _buildComposerAction(Icons.videocam_outlined, 'Video'),
+                    _buildComposerAction(Icons.videocam_outlined, 'Video', onAddVideo),
                     const SizedBox(width: 12),
-                    _buildComposerAction(Icons.thermostat_outlined, 'Stats'),
+                    _buildComposerAction(Icons.thermostat_outlined, 'Stats', onAddStats),
+                    const SizedBox(width: 12),
+                    _buildComposerAction(Icons.local_offer_outlined, 'Tags', onAddTag),
                     const Spacer(),
                     ElevatedButton(
                       onPressed: onPublish,
@@ -1029,9 +1231,9 @@ class _PostComposerCard extends StatelessWidget {
     );
   }
 
-  Widget _buildComposerAction(IconData icon, String label) {
+  Widget _buildComposerAction(IconData icon, String label, VoidCallback onTap) {
     return InkWell(
-      onTap: () {},
+      onTap: onTap,
       borderRadius: BorderRadius.circular(4),
       child: Padding(
         padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
@@ -1248,16 +1450,11 @@ class _SocialPostCardState extends State<_SocialPostCard> {
       child: Stack(
         alignment: Alignment.center,
         children: [
-          Image.network(
-            post.mediaUrl!,
+          _PostMediaWidget(
+            mediaUrl: post.mediaUrl!,
             width: double.infinity,
             height: double.infinity,
             fit: BoxFit.cover,
-            errorBuilder: (context, error, stackTrace) => Container(
-              color: Colors.black26,
-              alignment: Alignment.center,
-              child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 32),
-            ),
           ),
           if (post.isVideo) ...[
             Material(
@@ -1706,5 +1903,605 @@ class _SocialUserMenuButtonState extends State<_SocialUserMenuButton> {
         },
       ),
     );
+  }
+}
+
+Widget _buildComposerAction(IconData icon, String label, VoidCallback onTap) {
+  return InkWell(
+    onTap: onTap,
+    borderRadius: BorderRadius.circular(4),
+    child: Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 4.0, vertical: 2.0),
+      child: Row(
+        children: [
+          Icon(icon, color: AppTheme.textLight, size: 18),
+          const SizedBox(width: 4),
+          Text(
+            label,
+            style: const TextStyle(color: AppTheme.textLight, fontSize: 11),
+          ),
+        ],
+      ),
+    ),
+  );
+}
+
+// --- Attachment Preview inside Composer ---
+class _ComposerAttachmentPreview extends StatelessWidget {
+  final String? mediaUrl;
+  final bool isVideo;
+  final Map<String, String>? stats;
+  final List<String> tags;
+  final VoidCallback onRemoveMedia;
+  final VoidCallback onRemoveStats;
+  final Function(String) onRemoveTag;
+
+  const _ComposerAttachmentPreview({
+    this.mediaUrl,
+    required this.isVideo,
+    this.stats,
+    required this.tags,
+    required this.onRemoveMedia,
+    required this.onRemoveStats,
+    required this.onRemoveTag,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      crossAxisAlignment: CrossAxisAlignment.start,
+      children: [
+        // Media Preview
+        if (mediaUrl != null) ...[
+          const SizedBox(height: 12),
+          Stack(
+            children: [
+              ClipRRect(
+                borderRadius: BorderRadius.circular(8),
+                child: AspectRatio(
+                  aspectRatio: isVideo ? 16 / 9 : 1.0,
+                  child: Stack(
+                    alignment: Alignment.center,
+                    children: [
+                      _PostMediaWidget(
+                        mediaUrl: mediaUrl!,
+                        width: double.infinity,
+                        height: double.infinity,
+                        fit: BoxFit.cover,
+                        errorBuilder: (_, __, ___) => Container(
+                          color: Colors.black26,
+                          alignment: Alignment.center,
+                          child: const Icon(Icons.broken_image, color: Colors.white),
+                        ),
+                      ),
+                      if (isVideo)
+                        const CircleAvatar(
+                          backgroundColor: Colors.black45,
+                          child: Icon(Icons.play_arrow, color: Colors.white),
+                        ),
+                    ],
+                  ),
+                ),
+              ),
+              Positioned(
+                top: 8,
+                right: 8,
+                child: CircleAvatar(
+                  radius: 14,
+                  backgroundColor: Colors.black.withValues(alpha: 0.8),
+                  child: IconButton(
+                    padding: EdgeInsets.zero,
+                    icon: const Icon(Icons.close, color: Colors.white, size: 14),
+                    onPressed: onRemoveMedia,
+                  ),
+                ),
+              ),
+            ],
+          ),
+        ],
+
+        // Stats Preview
+        if (stats != null && stats!.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Container(
+            padding: const EdgeInsets.all(10),
+            decoration: BoxDecoration(
+              color: AppTheme.bgPrimary,
+              borderRadius: BorderRadius.circular(8),
+              border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.2)),
+            ),
+            child: Row(
+              children: [
+                Expanded(
+                  child: Row(
+                    children: stats!.entries.map((entry) {
+                      return Expanded(
+                        child: Container(
+                          margin: const EdgeInsets.symmetric(horizontal: 4),
+                          padding: const EdgeInsets.all(6),
+                          decoration: BoxDecoration(
+                            color: AppTheme.bgSecondary,
+                            borderRadius: BorderRadius.circular(4),
+                          ),
+                          child: Column(
+                            crossAxisAlignment: CrossAxisAlignment.start,
+                            children: [
+                              Text(entry.key, style: const TextStyle(color: AppTheme.textLight, fontSize: 8)),
+                              const SizedBox(height: 2),
+                              Text(entry.value, style: const TextStyle(color: AppTheme.accentColor, fontWeight: FontWeight.bold, fontSize: 10)),
+                            ],
+                          ),
+                        ),
+                      );
+                    }).toList(),
+                  ),
+                ),
+                IconButton(
+                  icon: const Icon(Icons.close, color: Colors.redAccent, size: 16),
+                  onPressed: onRemoveStats,
+                  padding: EdgeInsets.zero,
+                  constraints: const BoxConstraints(),
+                ),
+              ],
+            ),
+          ),
+        ],
+
+        // Tags Preview
+        if (tags.isNotEmpty) ...[
+          const SizedBox(height: 12),
+          Wrap(
+            spacing: 6,
+            runSpacing: 6,
+            children: tags.map((tag) {
+              return Chip(
+                label: Text('#$tag', style: const TextStyle(fontSize: 10, color: Colors.white)),
+                backgroundColor: AppTheme.bgPrimary,
+                shape: RoundedRectangleBorder(
+                  borderRadius: BorderRadius.circular(16),
+                  side: BorderSide(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+                ),
+                padding: EdgeInsets.zero,
+                labelPadding: const EdgeInsets.symmetric(horizontal: 8),
+                deleteIcon: const Icon(Icons.close, size: 10, color: Colors.white70),
+                onDeleted: () => onRemoveTag(tag),
+              );
+            }).toList(),
+          ),
+        ],
+      ],
+    );
+  }
+}
+
+// --- Attachment Selection Dialogs ---
+void _showAddPhotoDialog(BuildContext context, Function(String) onAdded) {
+  final TextEditingController urlController = TextEditingController();
+  final List<Map<String, String>> presets = [
+    {
+      'title': 'Green Tree Python',
+      'url': 'https://images.unsplash.com/photo-1619566636858-adf3ef46400b?w=600&auto=format&fit=crop&q=60'
+    },
+    {
+      'title': 'Leopard Gecko',
+      'url': 'https://images.unsplash.com/photo-1504450758481-7338ecc7524a?w=600&auto=format&fit=crop&q=60'
+    },
+    {
+      'title': 'Bioactive Enclosure',
+      'url': 'https://images.unsplash.com/photo-1545239351-ef35f43d514b?w=600&auto=format&fit=crop&q=60'
+    },
+    {
+      'title': 'Ball Python',
+      'url': 'https://images.unsplash.com/photo-16008688847ee80e7176a992?w=600&auto=format&fit=crop&q=60'
+    }
+  ];
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppTheme.bgSecondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+      ),
+      title: const Text('Add Photo to Broadcast', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () async {
+                final ImagePicker picker = ImagePicker();
+                final XFile? image = await picker.pickImage(source: ImageSource.gallery);
+                if (image != null && context.mounted) {
+                  onAdded(image.path);
+                  Navigator.pop(context);
+                }
+              },
+              icon: const Icon(Icons.upload_file, size: 18),
+              label: const Text('Choose Image from Device', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.bgPrimary,
+                foregroundColor: AppTheme.primaryColor,
+                side: const BorderSide(color: AppTheme.primaryColor, width: 1),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Or Enter Image URL:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: urlController,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'https://...',
+                hintStyle: const TextStyle(color: AppTheme.textLight),
+                fillColor: AppTheme.bgPrimary,
+                filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Or Select from Presets:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: presets.map((preset) {
+                return InkWell(
+                  onTap: () {
+                    onAdded(preset['url']!);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgPrimary,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(preset['title']!, style: const TextStyle(color: AppTheme.primaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (urlController.text.trim().isNotEmpty) {
+              onAdded(urlController.text.trim());
+            }
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+          child: const Text('Add', style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showAddVideoDialog(BuildContext context, Function(String) onAdded) {
+  final TextEditingController urlController = TextEditingController();
+  final List<Map<String, String>> presets = [
+    {
+      'title': 'Feeding Feed Log',
+      'url': 'https://images.unsplash.com/photo-1563206767-5b18f218e8de?w=600&auto=format&fit=crop&q=60'
+    },
+    {
+      'title': 'Mist Cycle Tour',
+      'url': 'https://images.unsplash.com/photo-1534710961226-85da9da8703b?w=600&auto=format&fit=crop&q=60'
+    }
+  ];
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppTheme.bgSecondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+      ),
+      title: const Text('Add Video to Broadcast', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          crossAxisAlignment: CrossAxisAlignment.stretch,
+          children: [
+            ElevatedButton.icon(
+              onPressed: () async {
+                final ImagePicker picker = ImagePicker();
+                final XFile? video = await picker.pickVideo(source: ImageSource.gallery);
+                if (video != null && context.mounted) {
+                  onAdded(video.path);
+                  Navigator.pop(context);
+                }
+              },
+              icon: const Icon(Icons.upload_file, size: 18),
+              label: const Text('Choose Video from Device', style: TextStyle(fontWeight: FontWeight.bold, fontSize: 13)),
+              style: ElevatedButton.styleFrom(
+                backgroundColor: AppTheme.bgPrimary,
+                foregroundColor: AppTheme.accentColor,
+                side: const BorderSide(color: AppTheme.accentColor, width: 1),
+                padding: const EdgeInsets.symmetric(vertical: 12),
+                shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(8)),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Or Enter Video URL:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 8),
+            TextField(
+              controller: urlController,
+              style: const TextStyle(color: Colors.white, fontSize: 13),
+              decoration: InputDecoration(
+                hintText: 'https://...',
+                hintStyle: const TextStyle(color: AppTheme.textLight),
+                fillColor: AppTheme.bgPrimary,
+                filled: true,
+                border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+              ),
+            ),
+            const SizedBox(height: 16),
+            const Text('Or Select from Presets:', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+            const SizedBox(height: 8),
+            Wrap(
+              spacing: 8,
+              runSpacing: 8,
+              children: presets.map((preset) {
+                return InkWell(
+                  onTap: () {
+                    onAdded(preset['url']!);
+                    Navigator.pop(context);
+                  },
+                  child: Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 6),
+                    decoration: BoxDecoration(
+                      color: AppTheme.bgPrimary,
+                      borderRadius: BorderRadius.circular(20),
+                      border: Border.all(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+                    ),
+                    child: Text(preset['title']!, style: const TextStyle(color: AppTheme.primaryColor, fontSize: 11, fontWeight: FontWeight.bold)),
+                  ),
+                );
+              }).toList(),
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (urlController.text.trim().isNotEmpty) {
+              onAdded(urlController.text.trim());
+            }
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+          child: const Text('Add', style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showAddStatsDialog(BuildContext context, Function(Map<String, String>) onAdded) {
+  final TextEditingController tempController = TextEditingController(text: '88°F');
+  final TextEditingController humidityController = TextEditingController(text: '65%');
+  final TextEditingController weightController = TextEditingController(text: '120g');
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppTheme.bgSecondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+      ),
+      title: const Text('Add Herpetarium Stats', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      content: SingleChildScrollView(
+        child: Column(
+          mainAxisSize: MainAxisSize.min,
+          children: [
+            Row(
+              children: [
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Temperature', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: tempController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: '88°F',
+                          hintStyle: const TextStyle(color: AppTheme.textLight),
+                          fillColor: AppTheme.bgPrimary,
+                          filled: true,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                const SizedBox(width: 12),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text('Humidity', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                      const SizedBox(height: 6),
+                      TextField(
+                        controller: humidityController,
+                        style: const TextStyle(color: Colors.white, fontSize: 13),
+                        decoration: InputDecoration(
+                          hintText: '65%',
+                          hintStyle: const TextStyle(color: AppTheme.textLight),
+                          fillColor: AppTheme.bgPrimary,
+                          filled: true,
+                          border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ],
+            ),
+            const SizedBox(height: 16),
+            Column(
+              crossAxisAlignment: CrossAxisAlignment.start,
+              children: [
+                const Text('Animal Weight', style: TextStyle(color: AppTheme.textSecondary, fontSize: 11)),
+                const SizedBox(height: 6),
+                TextField(
+                  controller: weightController,
+                  style: const TextStyle(color: Colors.white, fontSize: 13),
+                  decoration: InputDecoration(
+                    hintText: '120g',
+                    hintStyle: const TextStyle(color: AppTheme.textLight),
+                    fillColor: AppTheme.bgPrimary,
+                    filled: true,
+                    border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+                  ),
+                ),
+              ],
+            ),
+          ],
+        ),
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            onAdded({
+              'Temp': tempController.text.trim(),
+              'Humidity': humidityController.text.trim(),
+              'Weight': weightController.text.trim(),
+            });
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+          child: const Text('Add Stats', style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    ),
+  );
+}
+
+void _showAddTagDialog(BuildContext context, Function(String) onAdded) {
+  final TextEditingController tagController = TextEditingController();
+
+  showDialog(
+    context: context,
+    builder: (context) => AlertDialog(
+      backgroundColor: AppTheme.bgSecondary,
+      shape: RoundedRectangleBorder(
+        borderRadius: BorderRadius.circular(16),
+        side: BorderSide(color: AppTheme.borderColor.withValues(alpha: 0.3)),
+      ),
+      title: const Text('Add Tag', style: TextStyle(color: Colors.white, fontSize: 16, fontWeight: FontWeight.bold)),
+      content: Column(
+        mainAxisSize: MainAxisSize.min,
+        crossAxisAlignment: CrossAxisAlignment.start,
+        children: [
+          const Text('Enter tag name (without #):', style: TextStyle(color: AppTheme.textSecondary, fontSize: 12)),
+          const SizedBox(height: 8),
+          TextField(
+            controller: tagController,
+            style: const TextStyle(color: Colors.white, fontSize: 13),
+            decoration: InputDecoration(
+              hintText: 'BallPython',
+              hintStyle: const TextStyle(color: AppTheme.textLight),
+              fillColor: AppTheme.bgPrimary,
+              filled: true,
+              border: OutlineInputBorder(borderRadius: BorderRadius.circular(8), borderSide: BorderSide.none),
+            ),
+          ),
+        ],
+      ),
+      actions: [
+        TextButton(
+          onPressed: () => Navigator.pop(context),
+          child: const Text('Cancel', style: TextStyle(color: Colors.white54)),
+        ),
+        ElevatedButton(
+          onPressed: () {
+            if (tagController.text.trim().isNotEmpty) {
+              onAdded(tagController.text.trim());
+            }
+            Navigator.pop(context);
+          },
+          style: ElevatedButton.styleFrom(backgroundColor: AppTheme.primaryColor),
+          child: const Text('Add Tag', style: TextStyle(color: Colors.black)),
+        ),
+      ],
+    ),
+  );
+}
+
+class _PostMediaWidget extends StatelessWidget {
+  final String mediaUrl;
+  final double? width;
+  final double? height;
+  final BoxFit fit;
+  final Widget Function(BuildContext, Object, StackTrace?)? errorBuilder;
+
+  const _PostMediaWidget({
+    required this.mediaUrl,
+    this.width,
+    this.height,
+    this.fit = BoxFit.cover,
+    this.errorBuilder,
+  });
+
+  @override
+  Widget build(BuildContext context) {
+    final isWebUrl = kIsWeb ||
+        mediaUrl.startsWith('http://') ||
+        mediaUrl.startsWith('https://') ||
+        mediaUrl.startsWith('blob:') ||
+        mediaUrl.startsWith('data:');
+
+    if (isWebUrl) {
+      return Image.network(
+        mediaUrl,
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: errorBuilder ?? (context, error, stackTrace) => Container(
+          color: Colors.black26,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 32),
+        ),
+      );
+    } else {
+      return Image.file(
+        io.File(mediaUrl),
+        width: width,
+        height: height,
+        fit: fit,
+        errorBuilder: errorBuilder ?? (context, error, stackTrace) => Container(
+          color: Colors.black26,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 32),
+        ),
+      );
+    }
   }
 }
