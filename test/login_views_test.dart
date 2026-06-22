@@ -89,15 +89,15 @@ void main() {
     );
 
     // Verify Title Branding
-    expect(find.text('ScaleSync Social'), findsOneWidget);
-    expect(find.text('Welcome Back'), findsOneWidget);
-    expect(find.text('Sign in to join the community and share updates'), findsOneWidget);
+    expect(find.text('SCALESYNC_SOCIAL'), findsOneWidget);
+    expect(find.text('COMMUNITY\nACCESS PORTAL'), findsOneWidget);
+    expect(find.text('MODULE::AUTH_GATEWAY'), findsOneWidget);
 
     // Verify Fields & Buttons
-    expect(find.widgetWithText(TextFormField, 'Enter your email'), findsOneWidget);
-    expect(find.widgetWithText(TextFormField, 'Enter your password'), findsOneWidget);
-    expect(find.text('Remember me'), findsOneWidget);
-    expect(find.text('Sign In'), findsOneWidget);
-    expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('EMAIL_ADDRESS'), findsOneWidget);
+    expect(find.text('MASTER_KEY'), findsOneWidget);
+    expect(find.text('SIGN_IN_WITH_ECOSYSTEM_ACCOUNT'), findsOneWidget);
+    expect(find.text('BROWSE_COMMUNITY_AS_GUEST'), findsOneWidget);
+    expect(find.text('REGISTER_ECOSYSTEM_ACCOUNT →'), findsOneWidget);
   });
 }

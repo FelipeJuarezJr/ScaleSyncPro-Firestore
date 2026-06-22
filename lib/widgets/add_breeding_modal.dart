@@ -180,10 +180,26 @@ class _AddBreedingModalState extends State<AddBreedingModal> {
                             final male = filteredMales[index];
                             final photoUrl = male.photoUrls.isNotEmpty ? male.photoUrls.first : null;
                             return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                                backgroundColor: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
-                                child: photoUrl == null ? const Icon(Icons.male, color: Colors.blue) : null,
+                              leading: ClipOval(
+                                child: photoUrl != null
+                                    ? Image.network(
+                                        photoUrl,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Container(
+                                          width: 40,
+                                          height: 40,
+                                          color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                                          child: const Icon(Icons.male, color: Colors.blue),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 40,
+                                        height: 40,
+                                        color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                                        child: const Icon(Icons.male, color: Colors.blue),
+                                      ),
                               ),
                               title: Text(male.name),
                               subtitle: Text('${male.species}${male.morph != null ? " • ${male.morph}" : ""}'),
@@ -267,10 +283,26 @@ class _AddBreedingModalState extends State<AddBreedingModal> {
                             final female = filteredFemales[index];
                             final photoUrl = female.photoUrls.isNotEmpty ? female.photoUrls.first : null;
                             return ListTile(
-                              leading: CircleAvatar(
-                                backgroundImage: photoUrl != null ? NetworkImage(photoUrl) : null,
-                                backgroundColor: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
-                                child: photoUrl == null ? const Icon(Icons.female, color: Colors.pink) : null,
+                              leading: ClipOval(
+                                child: photoUrl != null
+                                    ? Image.network(
+                                        photoUrl,
+                                        width: 40,
+                                        height: 40,
+                                        fit: BoxFit.cover,
+                                        errorBuilder: (context, error, stackTrace) => Container(
+                                          width: 40,
+                                          height: 40,
+                                          color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                                          child: const Icon(Icons.female, color: Colors.pink),
+                                        ),
+                                      )
+                                    : Container(
+                                        width: 40,
+                                        height: 40,
+                                        color: isDark ? AppTheme.bgTertiary : AppTheme.lightBgTertiary,
+                                        child: const Icon(Icons.female, color: Colors.pink),
+                                      ),
                               ),
                               title: Text(female.name),
                               subtitle: Text('${female.species}${female.morph != null ? " • ${female.morph}" : ""}'),

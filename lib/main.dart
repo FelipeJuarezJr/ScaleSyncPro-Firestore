@@ -1,3 +1,4 @@
+import 'package:flutter/foundation.dart' show kDebugMode;
 import 'package:flutter/material.dart';
 import 'package:firebase_core/firebase_core.dart';
 import 'package:provider/provider.dart' as legacy_provider;
@@ -14,6 +15,7 @@ import 'features/ScaleSyncMarketplace/views/marketplace_grid_view.dart';
 import 'features/ScaleSyncMarketplace/views/market_login_view.dart';
 import 'features/ScaleSyncSocial/views/social_feed_view.dart';
 import 'features/ScaleSyncSocial/views/social_login_view.dart';
+import 'widgets/developer_scaffold.dart';
 
 void main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -81,13 +83,20 @@ class ScaleSyncProApp extends StatelessWidget {
             }
           }
 
+          // In DEBUG builds, wrap the home widget inside the DeveloperScaffold
+          // so the portal switcher bar is visible at the top.
+          // In RELEASE builds, bypass it entirely and mount the home widget natively.
+          final Widget resolvedHome = kDebugMode
+              ? const DeveloperScaffold()
+              : getHomeWidget();
+
           return MaterialApp(
             title: getTitle(),
             debugShowCheckedModeBanner: false,
             theme: AppTheme.lightTheme,
             darkTheme: AppTheme.darkTheme,
             themeMode: themeService.isDarkMode ? ThemeMode.dark : ThemeMode.light,
-            home: getHomeWidget(),
+            home: resolvedHome,
           );
         },
       ),

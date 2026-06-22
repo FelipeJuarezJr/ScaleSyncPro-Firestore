@@ -1648,9 +1648,10 @@ class _SocialFeedViewState extends State<SocialFeedView> {
       ),
       child: Column(
         children: [
-          CircleAvatar(
+          _SafeCircleAvatar(
+            imageUrl: avatarUrl,
+            fallbackText: name,
             radius: 26,
-            backgroundImage: NetworkImage(avatarUrl),
           ),
           const SizedBox(height: 8),
           Text(
@@ -1704,6 +1705,11 @@ class _SocialFeedViewState extends State<SocialFeedView> {
               imageUrl,
               fit: BoxFit.cover,
               width: double.infinity,
+              errorBuilder: (context, error, stackTrace) => Container(
+                color: AppTheme.bgTertiary,
+                alignment: Alignment.center,
+                child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 28),
+              ),
             ),
           ),
           Padding(
@@ -1929,9 +1935,10 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           children: [
                             Stack(
                               children: [
-                                CircleAvatar(
+                                _SafeCircleAvatar(
+                                  imageUrl: chat['avatar'] as String?,
+                                  fallbackText: chat['name'] as String? ?? '',
                                   radius: 24,
-                                  backgroundImage: NetworkImage(chat['avatar'] as String),
                                 ),
                                 if (isOnline)
                                   Positioned(
@@ -2067,9 +2074,10 @@ class _SocialFeedViewState extends State<SocialFeedView> {
               ],
               Stack(
                 children: [
-                  CircleAvatar(
+                  _SafeCircleAvatar(
+                    imageUrl: chat['avatar'] as String?,
+                    fallbackText: chat['name'] as String? ?? '',
                     radius: 20,
-                    backgroundImage: NetworkImage(chat['avatar'] as String),
                   ),
                   if (isOnline)
                     Positioned(
@@ -2549,6 +2557,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
             width: 240,
             height: 240,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              width: 240,
+              height: 240,
+              color: AppTheme.bgTertiary,
+              alignment: Alignment.center,
+              child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 28),
+            ),
           ),
           if (isUploading) ...[
             Container(
@@ -3066,6 +3081,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
             height: 120,
             width: double.infinity,
             fit: BoxFit.cover,
+            errorBuilder: (context, error, stackTrace) => Container(
+              height: 120,
+              width: double.infinity,
+              color: AppTheme.bgTertiary,
+              alignment: Alignment.center,
+              child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 28),
+            ),
           ),
           Padding(
             padding: const EdgeInsets.all(12.0),
@@ -3309,9 +3331,10 @@ class _SocialFeedViewState extends State<SocialFeedView> {
       child: Column(
         crossAxisAlignment: CrossAxisAlignment.center,
         children: [
-          CircleAvatar(
+          _SafeCircleAvatar(
+            imageUrl: chat['avatar'] as String?,
+            fallbackText: chat['name'] as String? ?? '',
             radius: 36,
-            backgroundImage: NetworkImage(chat['avatar'] as String),
           ),
           const SizedBox(height: 12),
           Text(
@@ -3407,9 +3430,10 @@ class _SocialFeedViewState extends State<SocialFeedView> {
           child: Column(
             mainAxisSize: MainAxisSize.min,
             children: [
-              CircleAvatar(
+              _SafeCircleAvatar(
+                imageUrl: chat['avatar'] as String?,
+                fallbackText: chat['name'] as String? ?? '',
                 radius: 36,
-                backgroundImage: NetworkImage(chat['avatar'] as String),
               ),
               const SizedBox(height: 12),
               Text(
@@ -4501,6 +4525,11 @@ class _SocialFeedViewState extends State<SocialFeedView> {
       child: Image.network(
         imageUrl,
         fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) => Container(
+          color: AppTheme.bgTertiary,
+          alignment: Alignment.center,
+          child: const Icon(Icons.broken_image, color: AppTheme.textLight, size: 20),
+        ),
       ),
     );
   }
@@ -6465,6 +6494,65 @@ class _BouncingDotsState extends State<_BouncingDots> with SingleTickerProviderS
           const SizedBox(width: 4),
           _buildDot(2),
         ],
+      ),
+    );
+  }
+}
+
+class _SafeCircleAvatar extends StatelessWidget {
+  final String? imageUrl;
+  final String fallbackText;
+  final double radius;
+  final IconData fallbackIcon;
+
+  const _SafeCircleAvatar({
+    Key? key,
+    required this.imageUrl,
+    required this.fallbackText,
+    this.radius = 20,
+    this.fallbackIcon = Icons.person,
+  }) : super(key: key);
+
+  @override
+  Widget build(BuildContext context) {
+    final initials = fallbackText.trim().isNotEmpty
+        ? (fallbackText.trim().length >= 2
+            ? fallbackText.trim().substring(0, 2).toUpperCase()
+            : fallbackText.trim().substring(0, 1).toUpperCase())
+        : '';
+
+    final fallbackWidget = CircleAvatar(
+      radius: radius,
+      backgroundColor: AppTheme.primaryColor.withOpacity(0.15),
+      child: initials.isNotEmpty
+          ? Text(
+              initials,
+              style: TextStyle(
+                color: AppTheme.primaryColor,
+                fontWeight: FontWeight.bold,
+                fontSize: radius * 0.7,
+              ),
+            )
+          : Icon(
+              fallbackIcon,
+              color: AppTheme.primaryColor,
+              size: radius,
+            ),
+    );
+
+    if (imageUrl == null || imageUrl!.isEmpty || !imageUrl!.startsWith('http')) {
+      return fallbackWidget;
+    }
+
+    return ClipOval(
+      child: Image.network(
+        imageUrl!,
+        width: radius * 2,
+        height: radius * 2,
+        fit: BoxFit.cover,
+        errorBuilder: (context, error, stackTrace) {
+          return fallbackWidget;
+        },
       ),
     );
   }

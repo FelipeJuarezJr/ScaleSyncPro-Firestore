@@ -108,7 +108,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Ball Python',
       price: 450.0,
       morphs: ['Pastel Clown'],
-      imageUrls: ['https://images.unsplash.com/photo-1531386151447-fd76ad50012f?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_1/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 2)),
       verifiedPedigreeSnapshot: [1.2, 1.5, 1.8],
     ),
@@ -120,7 +120,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Crested Gecko',
       price: 185.0,
       morphs: ['Flame Pinstripe'],
-      imageUrls: ['https://images.unsplash.com/photo-1504450758481-7338ecc7524a?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_2/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 4)),
       verifiedPedigreeSnapshot: [0.8, 0.9],
     ),
@@ -132,7 +132,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Blue Tongue Skink',
       price: 320.0,
       morphs: ['Northern BTS'],
-      imageUrls: ['https://images.unsplash.com/photo-1629157257475-2735b48e4c56?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_3/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 6)),
       verifiedPedigreeSnapshot: [],
     ),
@@ -144,7 +144,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Panther Chameleon',
       price: 780.0,
       morphs: ['Ambilobe'],
-      imageUrls: ['https://images.unsplash.com/photo-1513836279014-a89f7a76ae86?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_4/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 8)),
       verifiedPedigreeSnapshot: [2.1],
     ),
@@ -156,7 +156,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Sulcata Tortoise',
       price: 210.0,
       morphs: ['Standard'],
-      imageUrls: ['https://images.unsplash.com/photo-1508817628294-5a453fa0b8fb?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_5/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 10)),
       verifiedPedigreeSnapshot: [],
     ),
@@ -168,7 +168,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Leopard Gecko',
       price: 95.0,
       morphs: ['Tangerine Tremper'],
-      imageUrls: ['https://images.unsplash.com/photo-1551085254-e96b210db58a?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_6/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 12)),
       verifiedPedigreeSnapshot: [0.5, 0.6],
     ),
@@ -180,7 +180,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Corn Snake',
       price: 140.0,
       morphs: ['Tessera Motley'],
-      imageUrls: ['https://images.unsplash.com/photo-1604608684575-0497c3a5270c?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_7/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 14)),
       verifiedPedigreeSnapshot: [],
     ),
@@ -192,7 +192,7 @@ List<MarketplaceListing> _getMockListings() {
       title: 'Blue Iguana',
       price: 1200.0,
       morphs: ['Lesser Antilles'],
-      imageUrls: ['https://images.unsplash.com/photo-1546182990-dffeafbe841d?auto=format&fit=crop&q=80&w=600'],
+      imageUrls: ['https://picsum.photos/seed/scalesync_reptile_8/600/450'],
       listingDate: DateTime.now().subtract(const Duration(hours: 16)),
       verifiedPedigreeSnapshot: [1.5],
     ),
@@ -2410,22 +2410,49 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
 
                         const SizedBox(height: 24),
 
-                        // Action button
+                        // Auth-guarded action button
                         SizedBox(
                           width: double.infinity,
                           child: ElevatedButton.icon(
                             onPressed: () {
-                              Navigator.of(context).pop();
-                              ScaffoldMessenger.of(context).showSnackBar(
-                                SnackBar(
-                                  content: Text('Contacting ${listing.sellerName} to purchase genetics...'),
-                                  backgroundColor: isDark ? AppTheme.bgSecondary : AppTheme.lightBgSecondary,
-                                  behavior: SnackBarBehavior.floating,
-                                ),
+                              final authService = legacy_provider.Provider.of<AuthService>(
+                                context,
+                                listen: false,
                               );
+                              if (!authService.isAuthenticated) {
+                                // Guest: close this dialog then surface the auth sheet
+                                Navigator.of(context).pop();
+                                _showGuestAuthSheet(listing.sellerName);
+                              } else {
+                                Navigator.of(context).pop();
+                                ScaffoldMessenger.of(context).showSnackBar(
+                                  SnackBar(
+                                    content: Text(
+                                      'Opening message thread with ${listing.sellerName}...',
+                                    ),
+                                    backgroundColor: AppTheme.primaryColor.withOpacity(0.9),
+                                    behavior: SnackBarBehavior.floating,
+                                  ),
+                                );
+                              }
                             },
-                            icon: const Icon(Icons.payment, color: Colors.black),
-                            label: const Text('Acquire Genetics', style: TextStyle(color: Colors.black, fontWeight: FontWeight.bold)),
+                            icon: const Icon(Icons.chat_bubble_outline, color: Colors.black, size: 16),
+                            label: const Text(
+                              '[ INQUIRE / MESSAGE ]',
+                              style: TextStyle(
+                                color: Colors.black,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.2,
+                              ),
+                            ),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFA5E644),
+                              foregroundColor: Colors.black,
+                              padding: const EdgeInsets.symmetric(vertical: 14),
+                              shape: RoundedRectangleBorder(
+                                borderRadius: BorderRadius.circular(8),
+                              ),
+                            ),
                           ),
                         ),
                       ],
@@ -2435,6 +2462,367 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
               ),
             ),
           ),
+        );
+      },
+    );
+  }
+
+  // ==========================================
+  // Guest Anonymous Auth Intercept Sheet
+  // ==========================================
+
+  void _showGuestAuthSheet(String sellerName) {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool isPasswordVisible = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0B0D09),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border(
+                    top: BorderSide(color: Color(0xFF1E2619), width: 1),
+                    left: BorderSide(color: Color(0xFF1E2619), width: 1),
+                    right: BorderSide(color: Color(0xFF1E2619), width: 1),
+                  ),
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E3229),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+
+                      // Header badge + label
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color(0xFFA5E644).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: const Color(0xFFA5E644)
+                                      .withOpacity(0.4)),
+                            ),
+                            child: const Text(
+                              'AUTH REQUIRED',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.6,
+                                color: Color(0xFFA5E644),
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'Sign in to message seller',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8A9A80),
+                                fontFamily: 'monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        'INQUIRE / MESSAGE → $sellerName',
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      const Text(
+                        'A ScaleSyncPro ecosystem account is required to contact verified breeders.',
+                        style: TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF5A6A52),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // EMAIL label
+                      const Text(
+                        'EMAIL_ADDRESS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.4,
+                          color: Color(0xFF5A6A52),
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: emailController,
+                        keyboardType: TextInputType.emailAddress,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'user@scalesync.com',
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF3A4A34),
+                            fontSize: 14,
+                            fontFamily: 'monospace',
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF111309),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                                color: Color(0xFFA5E644), width: 1.5),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: AppTheme.dangerColor),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                                color: AppTheme.dangerColor, width: 1.5),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.trim().isEmpty) {
+                            return 'Email required';
+                          }
+                          if (!v.contains('@')) return 'Enter a valid email';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // PASSWORD label
+                      const Text(
+                        'MASTER_KEY',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 1.4,
+                          color: Color(0xFF5A6A52),
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: !isPasswordVisible,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: '••••••••••••',
+                          hintStyle: const TextStyle(
+                            color: Color(0xFF3A4A34),
+                            fontSize: 14,
+                          ),
+                          filled: true,
+                          fillColor: const Color(0xFF111309),
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 14, vertical: 12),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isPasswordVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: const Color(0xFF5A6A52),
+                              size: 18,
+                            ),
+                            onPressed: () {
+                              setSheetState(() {
+                                isPasswordVisible = !isPasswordVisible;
+                              });
+                            },
+                          ),
+                          border: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                                color: Color(0xFFA5E644), width: 1.5),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide:
+                                const BorderSide(color: AppTheme.dangerColor),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(8),
+                            borderSide: const BorderSide(
+                                color: AppTheme.dangerColor, width: 1.5),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'Password required';
+                          if (v.length < 6) return 'Min 6 characters';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Submit CTA
+                      SizedBox(
+                        height: 50,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (!formKey.currentState!.validate()) return;
+                                  setSheetState(() => isLoading = true);
+                                  try {
+                                    final authService =
+                                        legacy_provider.Provider.of<AuthService>(
+                                      context,
+                                      listen: false,
+                                    );
+                                    await authService
+                                        .signInWithEmailAndPassword(
+                                      emailController.text.trim(),
+                                      passwordController.text,
+                                    );
+                                    if (mounted) {
+                                      Navigator.of(context).pop();
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                            'Authenticated. Opening message thread with $sellerName...',
+                                          ),
+                                          backgroundColor:
+                                              AppTheme.primaryColor
+                                                  .withOpacity(0.9),
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  } catch (e) {
+                                    setSheetState(() => isLoading = false);
+                                    if (mounted) {
+                                      ScaffoldMessenger.of(context)
+                                          .showSnackBar(
+                                        SnackBar(
+                                          content: Text(
+                                              'Authentication failed: $e'),
+                                          backgroundColor:
+                                              AppTheme.dangerColor,
+                                          behavior: SnackBarBehavior.floating,
+                                        ),
+                                      );
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFA5E644),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black),
+                                  ),
+                                )
+                              : const Text(
+                                  '[ AUTHENTICATE → INQUIRE ]',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'CONTINUE AS GUEST  ↗',
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 1.2,
+                            color: Color(0xFF5A6A52),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
         );
       },
     );
