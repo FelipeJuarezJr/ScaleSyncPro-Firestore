@@ -70,15 +70,48 @@ final List<int> transparentImage = [
   0x01, 0x00, 0x01, 0x00, 0x00, 0x02, 0x02, 0x4C, 0x01, 0x00, 0x3B
 ];
 
+class FakeUser implements User {
+  @override
+  final String uid;
+  @override
+  final String? displayName;
+  @override
+  final String? email;
+
+  FakeUser({required this.uid, this.displayName, this.email});
+
+  @override
+  dynamic noSuchMethod(Invocation invocation) => super.noSuchMethod(invocation);
+}
+
 class MockAuthService extends ChangeNotifier implements AuthService {
-  @override
-  User? get currentUser => null;
+  bool _authenticated = false;
+  Map<String, dynamic>? _userData;
+  User? _currentUser;
+
+  void setAuthenticated(bool val, {Map<String, dynamic>? data}) {
+    _authenticated = val;
+    _userData = data;
+    if (val) {
+      _currentUser = FakeUser(
+        uid: 'test_uid_123',
+        displayName: data?['name'] ?? 'Test User',
+        email: data?['email'] ?? 'test@example.com',
+      );
+    } else {
+      _currentUser = null;
+    }
+    notifyListeners();
+  }
 
   @override
-  bool get isAuthenticated => false;
+  User? get currentUser => _currentUser;
 
   @override
-  Map<String, dynamic>? get userData => null;
+  bool get isAuthenticated => _authenticated;
+
+  @override
+  Map<String, dynamic>? get userData => _userData;
 
   @override
   Future<void> signInWithEmailAndPassword(String email, String password) async {}
@@ -182,5 +215,18 @@ void main() {
     expect(find.text('Sell'), findsOneWidget);
     expect(find.text('Saved'), findsOneWidget);
     expect(find.text('Profile'), findsOneWidget);
+
+    // Verify unauthenticated header layout (Pro badge and "Guest" username)
+    expect(find.text('Pro'), findsAtLeastNWidgets(1));
+    expect(find.text('Guest'), findsAtLeastNWidgets(1));
+
+    // Change to authenticated state
+    mockAuthService.setAuthenticated(true, data: {'name': 'MarketBreeder'});
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Verify authenticated header layout displays the username "MarketBreeder"
+    expect(find.text('MarketBreeder'), findsAtLeastNWidgets(1));
+    expect(find.text('Pro'), findsAtLeastNWidgets(1));
   });
 }

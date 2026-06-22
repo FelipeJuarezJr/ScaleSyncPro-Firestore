@@ -596,53 +596,40 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
             const SizedBox(width: 16),
 
             // User section matching ScaleSync Pro
-            if (isLoggedIn) ...[
-              // Pro Badge
-              Container(
-                padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                decoration: BoxDecoration(
-                  color: AppTheme.accentColor,
-                  borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
-                ),
-                child: const Text(
-                  'Pro',
-                  style: TextStyle(
-                    fontSize: 10,
-                    fontWeight: FontWeight.bold,
-                    color: Colors.white,
-                  ),
-                ),
+            // Pro Badge
+            Container(
+              padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+              decoration: BoxDecoration(
+                color: AppTheme.accentColor,
+                borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
               ),
-              const SizedBox(width: 10),
-              // User Name
-              Text(
-                userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'Guest',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
+              child: const Text(
+                'Pro',
+                style: TextStyle(
+                  fontSize: 10,
+                  fontWeight: FontWeight.bold,
                   color: Colors.white,
                 ),
               ),
-              const SizedBox(width: 15),
-              _MarketplaceUserMenuButton(
-                userData: userData,
-                themeService: themeService,
-                authService: authService,
+            ),
+            const SizedBox(width: 10),
+            // User Name
+            Text(
+              isLoggedIn
+                  ? (userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'User')
+                  : 'Guest',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
               ),
-            ] else
-              TextButton.icon(
-                onPressed: () {
-                  Navigator.push(
-                    context,
-                    MaterialPageRoute(builder: (context) => const MarketLoginView()),
-                  );
-                },
-                icon: const Icon(Icons.login, size: 16, color: Color(0xFFA5E644)),
-                label: const Text(
-                  'Sign In',
-                  style: TextStyle(color: Color(0xFFA5E644), fontSize: 12),
-                ),
-              ),
+            ),
+            const SizedBox(width: 15),
+            _MarketplaceUserMenuButton(
+              userData: userData,
+              themeService: themeService,
+              authService: authService,
+            ),
           ],
         ),
       );
@@ -682,49 +669,40 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
               ),
               Row(
                 children: [
-                  if (isLoggedIn) ...[
-                    // Pro Badge
-                    Container(
-                      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
-                      decoration: BoxDecoration(
-                        color: AppTheme.accentColor,
-                        borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
-                      ),
-                      child: const Text(
-                        'Pro',
-                        style: TextStyle(
-                          fontSize: 10,
-                          fontWeight: FontWeight.bold,
-                          color: Colors.white,
-                        ),
-                      ),
+                  // Pro Badge
+                  Container(
+                    padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 4),
+                    decoration: BoxDecoration(
+                      color: AppTheme.accentColor,
+                      borderRadius: BorderRadius.circular(AppTheme.borderRadiusSm),
                     ),
-                    const SizedBox(width: 10),
-                    // User Name
-                    Text(
-                      userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'Guest',
+                    child: const Text(
+                      'Pro',
                       style: TextStyle(
-                        fontSize: 14,
-                        fontWeight: FontWeight.w500,
-                        color: isDark ? Colors.white : AppTheme.textPrimary,
+                        fontSize: 10,
+                        fontWeight: FontWeight.bold,
+                        color: Colors.white,
                       ),
                     ),
-                    const SizedBox(width: 15),
-                    _MarketplaceUserMenuButton(
-                      userData: userData,
-                      themeService: themeService,
-                      authService: authService,
+                  ),
+                  const SizedBox(width: 10),
+                  // User Name
+                  Text(
+                    isLoggedIn
+                        ? (userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'User')
+                        : 'Guest',
+                    style: TextStyle(
+                      fontSize: 14,
+                      fontWeight: FontWeight.w500,
+                      color: isDark ? Colors.white : AppTheme.textPrimary,
                     ),
-                  ] else
-                    IconButton(
-                      onPressed: () {
-                        Navigator.push(
-                          context,
-                          MaterialPageRoute(builder: (context) => const MarketLoginView()),
-                        );
-                      },
-                      icon: const Icon(Icons.login),
-                    ),
+                  ),
+                  const SizedBox(width: 15),
+                  _MarketplaceUserMenuButton(
+                    userData: userData,
+                    themeService: themeService,
+                    authService: authService,
+                  ),
                 ],
               ),
             ],
@@ -2869,14 +2847,18 @@ class _MarketplaceUserMenuButtonState extends State<_MarketplaceUserMenuButton> 
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.userData?['name'] ?? 'User',
+                  widget.authService.isAuthenticated
+                      ? (widget.userData?['name'] ?? 'User')
+                      : 'Guest',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
                   ),
                 ),
                 Text(
-                  widget.userData?['email'] ?? '',
+                  widget.authService.isAuthenticated
+                      ? (widget.userData?['email'] ?? '')
+                      : '',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
@@ -2931,16 +2913,28 @@ class _MarketplaceUserMenuButtonState extends State<_MarketplaceUserMenuButton> 
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
-            value: 'logout',
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 16),
-                SizedBox(width: 8),
-                Text('Sign Out'),
-              ],
+          if (widget.authService.isAuthenticated)
+            const PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(Icons.logout, size: 16),
+                  SizedBox(width: 8),
+                  Text('Sign Out'),
+                ],
+              ),
+            )
+          else
+            const PopupMenuItem(
+              value: 'login',
+              child: Row(
+                children: [
+                  Icon(Icons.login, size: 16),
+                  SizedBox(width: 8),
+                  Text('Sign In'),
+                ],
+              ),
             ),
-          ),
         ],
         onSelected: (value) async {
           switch (value) {
@@ -2953,6 +2947,13 @@ class _MarketplaceUserMenuButtonState extends State<_MarketplaceUserMenuButton> 
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const MarketLoginView()),
                   (route) => false,
+                );
+              }
+              break;
+            case 'login':
+              if (context.mounted) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const MarketLoginView()),
                 );
               }
               break;

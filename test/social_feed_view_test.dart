@@ -255,6 +255,15 @@ void main() {
     expect(find.text('MobileBreeder'), findsOneWidget);
     expect(find.text('Pro'), findsOneWidget);
 
+    // 3. Unauthenticated view test
+    mockAuthService.setAuthenticated(false);
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Verify username "Guest" is displayed
+    expect(find.text('Guest'), findsOneWidget);
+    expect(find.text('Pro'), findsOneWidget);
+
     // Reset window size override
     addTearDown(tester.binding.window.clearPhysicalSizeTestValue);
   });

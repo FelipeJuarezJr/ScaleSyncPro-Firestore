@@ -1132,22 +1132,22 @@ class _SocialFeedViewState extends State<SocialFeedView> {
               ),
             ),
           ),
-          if (isLoggedIn) ...{
-            const SizedBox(width: 10),
-            ConstrainedBox(
-              constraints: const BoxConstraints(maxWidth: 160),
-              child: Text(
-                userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'User',
-                style: const TextStyle(
-                  fontSize: 14,
-                  fontWeight: FontWeight.w500,
-                  color: Colors.white,
-                ),
-                maxLines: 1,
-                overflow: TextOverflow.ellipsis,
+          const SizedBox(width: 10),
+          ConstrainedBox(
+            constraints: const BoxConstraints(maxWidth: 160),
+            child: Text(
+              isLoggedIn
+                  ? (userData?['name'] ?? authService.currentUser?.displayName ?? authService.currentUser?.email?.split('@')[0] ?? 'User')
+                  : 'Guest',
+              style: const TextStyle(
+                fontSize: 14,
+                fontWeight: FontWeight.w500,
+                color: Colors.white,
               ),
+              maxLines: 1,
+              overflow: TextOverflow.ellipsis,
             ),
-          },
+          ),
           const SizedBox(width: 8),
           _SocialUserMenuButton(
             userData: userData,
@@ -5731,14 +5731,18 @@ class _SocialUserMenuButtonState extends State<_SocialUserMenuButton> {
               crossAxisAlignment: CrossAxisAlignment.start,
               children: [
                 Text(
-                  widget.userData?['name'] ?? widget.authService.currentUser?.displayName ?? widget.authService.currentUser?.email?.split('@')[0] ?? 'Gecko1',
+                  widget.authService.isAuthenticated
+                      ? (widget.userData?['name'] ?? widget.authService.currentUser?.displayName ?? widget.authService.currentUser?.email?.split('@')[0] ?? 'User')
+                      : 'Guest',
                   style: const TextStyle(
                     fontWeight: FontWeight.w600,
                     color: AppTheme.textPrimary,
                   ),
                 ),
                 Text(
-                  widget.userData?['email'] ?? widget.authService.currentUser?.email ?? 'gecko1@scalesync.pro',
+                  widget.authService.isAuthenticated
+                      ? (widget.userData?['email'] ?? widget.authService.currentUser?.email ?? '')
+                      : '',
                   style: const TextStyle(
                     fontSize: 12,
                     color: AppTheme.textSecondary,
@@ -5793,16 +5797,28 @@ class _SocialUserMenuButtonState extends State<_SocialUserMenuButton> {
             ),
           ),
           const PopupMenuDivider(),
-          const PopupMenuItem(
-            value: 'logout',
-            child: Row(
-              children: [
-                Icon(Icons.logout, size: 16),
-                SizedBox(width: 8),
-                Text('Sign Out'),
-              ],
+          if (widget.authService.isAuthenticated)
+            const PopupMenuItem(
+              value: 'logout',
+              child: Row(
+                children: [
+                  Icon(Icons.logout, size: 16),
+                  SizedBox(width: 8),
+                  Text('Sign Out'),
+                ],
+              ),
+            )
+          else
+            const PopupMenuItem(
+              value: 'login',
+              child: Row(
+                children: [
+                  Icon(Icons.login, size: 16),
+                  SizedBox(width: 8),
+                  Text('Sign In'),
+                ],
+              ),
             ),
-          ),
         ],
         onSelected: (value) async {
           switch (value) {
@@ -5815,6 +5831,13 @@ class _SocialUserMenuButtonState extends State<_SocialUserMenuButton> {
                 Navigator.of(context).pushAndRemoveUntil(
                   MaterialPageRoute(builder: (_) => const SocialLoginView()),
                   (route) => false,
+                );
+              }
+              break;
+            case 'login':
+              if (context.mounted) {
+                Navigator.of(context).push(
+                  MaterialPageRoute(builder: (_) => const SocialLoginView()),
                 );
               }
               break;
