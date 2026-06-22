@@ -191,7 +191,24 @@ void main() {
     expect(find.text('Breeder Spotlights'), findsOneWidget);
     expect(find.text('Trending Broadcasts'), findsOneWidget);
 
-    // Switch to Messages tab
+    // Switch to Messages tab (guest path)
+    await tester.tap(find.text('Messages'));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    expect(find.text('AUTH REQUIRED'), findsOneWidget);
+
+    // Dismiss the guest auth sheet
+    await tester.tapAt(const Offset(10, 10));
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Authenticate
+    mockAuthService.setAuthenticated(true, data: {'name': 'TestUser', 'email': 'test@example.com'});
+    await tester.pump();
+    await tester.pumpAndSettle();
+
+    // Switch to Messages tab (authenticated path)
     await tester.tap(find.text('Messages'));
     await tester.pump();
     await tester.pumpAndSettle();

@@ -1657,6 +1657,11 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                     right: 6,
                     child: GestureDetector(
                       onTap: () {
+                        final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+                        if (!authService.isAuthenticated) {
+                          _showGuestAuthSheet('Breeder', customTitle: 'LIKE REPTILE', customMessage: 'A ScaleSyncPro ecosystem account is required to favorite listings.');
+                          return;
+                        }
                         setState(() {
                           if (isFavorited) {
                             _favoritedListings.remove(listing.listingId);
@@ -1973,16 +1978,7 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
       // Sell
       final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
       if (!authService.isAuthenticated) {
-        ScaffoldMessenger.of(context).showSnackBar(
-          const SnackBar(
-            content: Text('Please sign in to list animals on the marketplace.'),
-            behavior: SnackBarBehavior.floating,
-          ),
-        );
-        Navigator.push(
-          context,
-          MaterialPageRoute(builder: (context) => const MarketLoginView()),
-        );
+        _showGuestAuthSheet('Breeder', customTitle: 'SELL REPTILE', customMessage: 'A ScaleSyncPro ecosystem account is required to list animals for sale.');
       } else {
         _showSellDialog(isDark);
       }
@@ -1991,6 +1987,11 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
 
     if (index == 3) {
       // Saved tab (Favorites)
+      final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+      if (!authService.isAuthenticated) {
+        _showGuestAuthSheet('Breeder', customTitle: 'SAVED ITEMS', customMessage: 'A ScaleSyncPro ecosystem account is required to view saved listings.');
+        return;
+      }
       setState(() {
         _activeBottomTab = 3;
       });
@@ -2000,6 +2001,10 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
     if (index == 4) {
       // Profile
       final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+      if (!authService.isAuthenticated) {
+        _showGuestAuthSheet('Breeder', customTitle: 'PROFILE ACCESS', customMessage: 'A ScaleSyncPro ecosystem account is required to view profile options.');
+        return;
+      }
       _showProfileOptions(authService.isAuthenticated, authService, isDark);
       return;
     }
@@ -2449,7 +2454,7 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
   // Guest Anonymous Auth Intercept Sheet
   // ==========================================
 
-  void _showGuestAuthSheet(String sellerName) {
+  void _showGuestAuthSheet(String sellerName, {String? customTitle, String? customMessage}) {
     final emailController = TextEditingController();
     final passwordController = TextEditingController();
     final formKey = GlobalKey<FormState>();
@@ -2523,10 +2528,10 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                             ),
                           ),
                           const SizedBox(width: 10),
-                          const Expanded(
+                          Expanded(
                             child: Text(
-                              'Sign in to message seller',
-                              style: TextStyle(
+                              customTitle != null ? 'Sign in to continue' : 'Sign in to message seller',
+                              style: const TextStyle(
                                 fontSize: 13,
                                 color: Color(0xFF8A9A80),
                                 fontFamily: 'monospace',
@@ -2538,7 +2543,7 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                       ),
                       const SizedBox(height: 6),
                       Text(
-                        'INQUIRE / MESSAGE → $sellerName',
+                        customTitle ?? 'INQUIRE / MESSAGE → $sellerName',
                         style: const TextStyle(
                           fontSize: 18,
                           fontWeight: FontWeight.bold,
@@ -2547,9 +2552,9 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                         ),
                       ),
                       const SizedBox(height: 4),
-                      const Text(
-                        'A ScaleSyncPro ecosystem account is required to contact verified breeders.',
-                        style: TextStyle(
+                      Text(
+                        customMessage ?? 'A ScaleSyncPro ecosystem account is required to contact verified breeders.',
+                        style: const TextStyle(
                           fontSize: 12,
                           color: Color(0xFF5A6A52),
                           height: 1.4,
@@ -2771,9 +2776,9 @@ class _MarketplaceGridViewState extends ConsumerState<MarketplaceGridView> {
                                         Colors.black),
                                   ),
                                 )
-                              : const Text(
-                                  '[ AUTHENTICATE → INQUIRE ]',
-                                  style: TextStyle(
+                              : Text(
+                                  customTitle != null ? '[ AUTHENTICATE ]' : '[ AUTHENTICATE → INQUIRE ]',
+                                  style: const TextStyle(
                                     fontWeight: FontWeight.bold,
                                     letterSpacing: 1.2,
                                     fontFamily: 'monospace',

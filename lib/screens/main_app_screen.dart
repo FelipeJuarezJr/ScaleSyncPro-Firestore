@@ -69,6 +69,10 @@ class _MainAppScreenState extends State<MainAppScreen> {
 
   @override
   Widget build(BuildContext context) {
+    final authService = context.watch<AuthService>();
+    if (!authService.isAuthenticated) {
+      return const LoginScreen();
+    }
     return Scaffold(
       body: kIsWeb 
         ? _buildWebLayout()

@@ -59,6 +59,18 @@ class _SocialFeedViewState extends State<SocialFeedView> {
   @override
   void initState() {
     super.initState();
+    _composerFocusNode.addListener(() {
+      if (_composerFocusNode.hasFocus) {
+        final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+        if (!authService.isAuthenticated) {
+          _composerFocusNode.unfocus();
+          _showGuestAuthSheet(
+            customTitle: 'BROADCAST UPDATE',
+            customMessage: 'A ScaleSyncPro ecosystem account is required to post specimen updates.',
+          );
+        }
+      }
+    });
     _searchChatsController.addListener(() {
       setState(() {
         _searchQuery = _searchChatsController.text;
@@ -717,6 +729,14 @@ class _SocialFeedViewState extends State<SocialFeedView> {
   }
 
   void _focusPostComposer() {
+    final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+    if (!authService.isAuthenticated) {
+      _showGuestAuthSheet(
+        customTitle: 'BROADCAST UPDATE',
+        customMessage: 'A ScaleSyncPro ecosystem account is required to post specimen updates.',
+      );
+      return;
+    }
     _composerFocusNode.requestFocus();
   }
 
@@ -909,6 +929,364 @@ class _SocialFeedViewState extends State<SocialFeedView> {
     );
   }
 
+  void _showGuestAuthSheet({required String customTitle, required String customMessage}) {
+    final emailController = TextEditingController();
+    final passwordController = TextEditingController();
+    final formKey = GlobalKey<FormState>();
+    bool isLoading = false;
+    bool isPasswordVisible = false;
+
+    showModalBottomSheet(
+      context: context,
+      isScrollControlled: true,
+      backgroundColor: Colors.transparent,
+      builder: (sheetCtx) {
+        return StatefulBuilder(
+          builder: (context, setSheetState) {
+            return Padding(
+              padding: EdgeInsets.only(
+                bottom: MediaQuery.of(context).viewInsets.bottom,
+              ),
+              child: Container(
+                padding: const EdgeInsets.fromLTRB(24, 20, 24, 32),
+                decoration: const BoxDecoration(
+                  color: Color(0xFF0B0D09),
+                  borderRadius: BorderRadius.vertical(top: Radius.circular(20)),
+                  border: Border(
+                    top: BorderSide(color: Color(0xFF1E2619), width: 1),
+                    left: BorderSide(color: Color(0xFF1E2619), width: 1),
+                    right: BorderSide(color: Color(0xFF1E2619), width: 1),
+                  ),
+                ),
+                child: Form(
+                  key: formKey,
+                  child: Column(
+                    mainAxisSize: MainAxisSize.min,
+                    crossAxisAlignment: CrossAxisAlignment.stretch,
+                    children: [
+                      // Drag handle
+                      Center(
+                        child: Container(
+                          width: 40,
+                          height: 4,
+                          margin: const EdgeInsets.only(bottom: 20),
+                          decoration: BoxDecoration(
+                            color: const Color(0xFF2E3229),
+                            borderRadius: BorderRadius.circular(2),
+                          ),
+                        ),
+                      ),
+
+                      // Header badge + label
+                      Row(
+                        children: [
+                          Container(
+                            padding: const EdgeInsets.symmetric(
+                                horizontal: 8, vertical: 3),
+                            decoration: BoxDecoration(
+                              color:
+                                  const Color(0xFFA5E644).withOpacity(0.12),
+                              borderRadius: BorderRadius.circular(4),
+                              border: Border.all(
+                                  color: const Color(0xFFA5E644)
+                                      .withOpacity(0.4)),
+                            ),
+                            child: const Text(
+                              'AUTH REQUIRED',
+                              style: TextStyle(
+                                fontSize: 9,
+                                fontWeight: FontWeight.bold,
+                                letterSpacing: 1.6,
+                                color: Color(0xFFA5E644),
+                                fontFamily: 'monospace',
+                              ),
+                            ),
+                          ),
+                          const SizedBox(width: 10),
+                          const Expanded(
+                            child: Text(
+                              'Sign in to continue',
+                              style: TextStyle(
+                                fontSize: 13,
+                                color: Color(0xFF8A9A80),
+                                fontFamily: 'monospace',
+                              ),
+                              overflow: TextOverflow.ellipsis,
+                            ),
+                          ),
+                        ],
+                      ),
+                      const SizedBox(height: 6),
+                      Text(
+                        customTitle,
+                        style: const TextStyle(
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                          color: Colors.white,
+                          letterSpacing: 0.5,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        customMessage,
+                        style: const TextStyle(
+                          fontSize: 12,
+                          color: Color(0xFF5A6A52),
+                          height: 1.4,
+                        ),
+                      ),
+                      const SizedBox(height: 24),
+
+                      // EMAIL label
+                      const Text(
+                        'EMAIL_ADDRESS',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: Color(0xFF5A6A52),
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // EMAIL field
+                      TextFormField(
+                        controller: emailController,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter account email...',
+                          hintStyle: const TextStyle(
+                              color: Color(0xFF2E3229), fontSize: 13),
+                          fillColor: const Color(0xFF070806),
+                          filled: true,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFA5E644)),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          errorStyle: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: Color(0xFFD32F2F),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'REQUIRED_FIELD';
+                          if (!v.contains('@')) return 'INVALID_EMAIL_FORMAT';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 16),
+
+                      // PASSWORD label
+                      const Text(
+                        'MASTER_KEY',
+                        style: TextStyle(
+                          fontSize: 10,
+                          fontWeight: FontWeight.bold,
+                          letterSpacing: 0.8,
+                          color: Color(0xFF5A6A52),
+                          fontFamily: 'monospace',
+                        ),
+                      ),
+                      const SizedBox(height: 6),
+
+                      // PASSWORD field
+                      TextFormField(
+                        controller: passwordController,
+                        obscureText: !isPasswordVisible,
+                        style: const TextStyle(
+                          color: Colors.white,
+                          fontSize: 14,
+                          fontFamily: 'monospace',
+                        ),
+                        decoration: InputDecoration(
+                          hintText: 'Enter password...',
+                          hintStyle: const TextStyle(
+                              color: Color(0xFF2E3229), fontSize: 13),
+                          fillColor: const Color(0xFF070806),
+                          filled: true,
+                          isDense: true,
+                          contentPadding: const EdgeInsets.symmetric(
+                              horizontal: 12, vertical: 12),
+                          suffixIcon: IconButton(
+                            icon: Icon(
+                              isPasswordVisible
+                                  ? Icons.visibility_off
+                                  : Icons.visibility,
+                              color: const Color(0xFF5A6A52),
+                              size: 16,
+                            ),
+                            onPressed: () {
+                              setSheetState(() {
+                                isPasswordVisible = !isPasswordVisible;
+                              });
+                            },
+                          ),
+                          enabledBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFF1E2619)),
+                          ),
+                          focusedBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFA5E644)),
+                          ),
+                          errorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          focusedErrorBorder: OutlineInputBorder(
+                            borderRadius: BorderRadius.circular(4),
+                            borderSide:
+                                const BorderSide(color: Color(0xFFD32F2F)),
+                          ),
+                          errorStyle: const TextStyle(
+                            fontFamily: 'monospace',
+                            fontSize: 11,
+                            color: Color(0xFFD32F2F),
+                          ),
+                        ),
+                        validator: (v) {
+                          if (v == null || v.isEmpty) return 'REQUIRED_FIELD';
+                          if (v.length < 6) return 'MIN_LENGTH_6_CHAR';
+                          return null;
+                        },
+                      ),
+                      const SizedBox(height: 24),
+
+                      // Sign In Button
+                      SizedBox(
+                        height: 44,
+                        child: ElevatedButton(
+                          onPressed: isLoading
+                              ? null
+                              : () async {
+                                  if (formKey.currentState!.validate()) {
+                                    setSheetState(() {
+                                      isLoading = true;
+                                    });
+                                    try {
+                                      final authService =
+                                          legacy_provider.Provider.of<AuthService>(
+                                              context,
+                                              listen: false);
+                                      await authService
+                                          .signInWithEmailAndPassword(
+                                        emailController.text.trim(),
+                                        passwordController.text,
+                                      );
+                                      if (sheetCtx.mounted) {
+                                        Navigator.of(sheetCtx).pop();
+                                      }
+                                      if (mounted) {
+                                        ScaffoldMessenger.of(context)
+                                            .showSnackBar(
+                                          const SnackBar(
+                                            content: Text(
+                                                'Authentication successful. Ecosystem state synced.'),
+                                            backgroundColor: Color(0xFFA5E644),
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    } catch (e) {
+                                      setSheetState(() {
+                                        isLoading = false;
+                                      });
+                                      if (sheetCtx.mounted) {
+                                        ScaffoldMessenger.of(sheetCtx)
+                                            .showSnackBar(
+                                          SnackBar(
+                                            content: Text(
+                                                'AUTH_FAILURE: ${e.toString()}'),
+                                            backgroundColor:
+                                                const Color(0xFFD32F2F),
+                                            behavior: SnackBarBehavior.floating,
+                                          ),
+                                        );
+                                      }
+                                    }
+                                  }
+                                },
+                          style: ElevatedButton.styleFrom(
+                            backgroundColor: const Color(0xFFA5E644),
+                            foregroundColor: Colors.black,
+                            shape: RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(8),
+                            ),
+                            elevation: 0,
+                          ),
+                          child: isLoading
+                              ? const SizedBox(
+                                  height: 20,
+                                  width: 20,
+                                  child: CircularProgressIndicator(
+                                    strokeWidth: 2,
+                                    valueColor: AlwaysStoppedAnimation<Color>(
+                                        Colors.black),
+                                  ),
+                                )
+                              : const Text(
+                                  '[ AUTHENTICATE ]',
+                                  style: TextStyle(
+                                    fontWeight: FontWeight.bold,
+                                    letterSpacing: 1.2,
+                                    fontFamily: 'monospace',
+                                  ),
+                                ),
+                        ),
+                      ),
+
+                      const SizedBox(height: 12),
+                      TextButton(
+                        onPressed: () => Navigator.of(context).pop(),
+                        child: const Text(
+                          'CONTINUE AS GUEST  ↗',
+                          style: TextStyle(
+                            fontSize: 11,
+                            letterSpacing: 1.2,
+                            color: Color(0xFF5A6A52),
+                            fontFamily: 'monospace',
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+              ),
+            );
+          },
+        );
+      },
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     final authService = legacy_provider.Provider.of<AuthService>(context);
@@ -1033,6 +1411,15 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           onPostPressed: _focusPostComposer,
                           activeTab: _activeBottomTab,
                           onTabSelected: (tab) {
+                            if (tab == 3 || tab == 4 || tab == 5) {
+                              if (!authService.isAuthenticated) {
+                                _showGuestAuthSheet(
+                                  customTitle: tab == 3 ? 'MESSAGING CENTER' : (tab == 4 ? 'PROFILE ACCESS' : 'SETTINGS ACCESS'),
+                                  customMessage: 'A ScaleSyncPro ecosystem account is required to access this feature.',
+                                );
+                                return;
+                              }
+                            }
                             setState(() {
                               _activeBottomTab = tab;
                             });
@@ -1053,6 +1440,15 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           onPostPressed: _focusPostComposer,
                           activeTab: _activeBottomTab,
                           onTabSelected: (tab) {
+                            if (tab == 3 || tab == 4 || tab == 5) {
+                              if (!authService.isAuthenticated) {
+                                _showGuestAuthSheet(
+                                  customTitle: tab == 3 ? 'MESSAGING CENTER' : (tab == 4 ? 'PROFILE ACCESS' : 'SETTINGS ACCESS'),
+                                  customMessage: 'A ScaleSyncPro ecosystem account is required to access this feature.',
+                                );
+                                return;
+                              }
+                            }
                             setState(() {
                               _activeBottomTab = tab;
                             });
@@ -1153,6 +1549,12 @@ class _SocialFeedViewState extends State<SocialFeedView> {
             userData: userData,
             themeService: themeService,
             authService: authService,
+            onAuthRequired: () {
+              _showGuestAuthSheet(
+                customTitle: 'PROFILE ACCESS',
+                customMessage: 'A ScaleSyncPro ecosystem account is required to view profile options.',
+              );
+            },
           ),
         ],
       ),
@@ -1297,6 +1699,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                         stats: _attachedStats,
                         tags: _attachedTags,
                         onAddPhoto: () {
+                          if (!authService.isAuthenticated) {
+                            _showGuestAuthSheet(
+                              customTitle: 'BROADCAST UPDATE',
+                              customMessage: 'A ScaleSyncPro ecosystem account is required to attach media.',
+                            );
+                            return;
+                          }
                           _showAddPhotoDialog(context, (url) {
                             setState(() {
                               _attachedMediaUrl = url;
@@ -1305,6 +1714,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           });
                         },
                         onAddVideo: () {
+                          if (!authService.isAuthenticated) {
+                            _showGuestAuthSheet(
+                              customTitle: 'BROADCAST UPDATE',
+                              customMessage: 'A ScaleSyncPro ecosystem account is required to attach media.',
+                            );
+                            return;
+                          }
                           _showAddVideoDialog(context, (url) {
                             setState(() {
                               _attachedMediaUrl = url;
@@ -1313,6 +1729,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           });
                         },
                         onAddStats: () {
+                          if (!authService.isAuthenticated) {
+                            _showGuestAuthSheet(
+                              customTitle: 'BROADCAST UPDATE',
+                              customMessage: 'A ScaleSyncPro ecosystem account is required to add pedigree statistics.',
+                            );
+                            return;
+                          }
                           _showAddStatsDialog(context, (statsMap) {
                             setState(() {
                               _attachedStats = statsMap;
@@ -1320,6 +1743,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           });
                         },
                         onAddTag: () {
+                          if (!authService.isAuthenticated) {
+                            _showGuestAuthSheet(
+                              customTitle: 'BROADCAST UPDATE',
+                              customMessage: 'A ScaleSyncPro ecosystem account is required to add tags.',
+                            );
+                            return;
+                          }
                           _showAddTagDialog(context, (tag) {
                             if (!_attachedTags.contains(tag)) {
                               setState(() {
@@ -1345,6 +1775,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                           });
                         },
                         onPublish: () {
+                          if (!authService.isAuthenticated) {
+                            _showGuestAuthSheet(
+                              customTitle: 'BROADCAST UPDATE',
+                              customMessage: 'A ScaleSyncPro ecosystem account is required to post specimen updates.',
+                            );
+                            return;
+                          }
                           if (_broadcastController.text.trim().isEmpty) return;
                           final userName = authService.currentUser?.email?.split('@').first ?? 'You';
                           final newPost = _MorphUpdatePost(
@@ -1382,6 +1819,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                     post: post,
                     isLiked: liked,
                     onLikeToggle: () {
+                      if (!authService.isAuthenticated) {
+                        _showGuestAuthSheet(
+                          customTitle: 'LIKE POST',
+                          customMessage: 'A ScaleSyncPro ecosystem account is required to like posts.',
+                        );
+                        return;
+                      }
                       setState(() {
                         if (liked) {
                           _likedPostIndices.remove(index - 1);
@@ -1398,6 +1842,13 @@ class _SocialFeedViewState extends State<SocialFeedView> {
                     post: post,
                     isLiked: liked,
                     onLikeToggle: () {
+                      if (!authService.isAuthenticated) {
+                        _showGuestAuthSheet(
+                          customTitle: 'LIKE POST',
+                          customMessage: 'A ScaleSyncPro ecosystem account is required to like posts.',
+                        );
+                        return;
+                      }
                       setState(() {
                         if (liked) {
                           _likedPostIndices.remove(index);
@@ -1451,8 +1902,41 @@ class _SocialFeedViewState extends State<SocialFeedView> {
               
               return GestureDetector(
                 onTap: () {
-                  if (isMiddle) {
+                  final authService = legacy_provider.Provider.of<AuthService>(context, listen: false);
+                  if (index == 2) {
+                    // Broadcast
+                    if (!authService.isAuthenticated) {
+                      _showGuestAuthSheet(
+                        customTitle: 'BROADCAST UPDATE',
+                        customMessage: 'A ScaleSyncPro ecosystem account is required to post specimen updates.',
+                      );
+                      return;
+                    }
                     _showMobilePostSheet(context);
+                  } else if (index == 3) {
+                    // Messages
+                    if (!authService.isAuthenticated) {
+                      _showGuestAuthSheet(
+                        customTitle: 'MESSAGING CENTER',
+                        customMessage: 'A ScaleSyncPro ecosystem account is required to access private messages.',
+                      );
+                      return;
+                    }
+                    setState(() {
+                      _activeBottomTab = index;
+                    });
+                  } else if (index == 4) {
+                    // Profile
+                    if (!authService.isAuthenticated) {
+                      _showGuestAuthSheet(
+                        customTitle: 'PROFILE ACCESS',
+                        customMessage: 'A ScaleSyncPro ecosystem account is required to view profiles.',
+                      );
+                      return;
+                    }
+                    setState(() {
+                      _activeBottomTab = index;
+                    });
                   } else {
                     setState(() {
                       _activeBottomTab = index;
@@ -5691,11 +6175,13 @@ class _SocialUserMenuButton extends StatefulWidget {
   final Map<String, dynamic>? userData;
   final ThemeService themeService;
   final AuthService authService;
+  final VoidCallback onAuthRequired;
 
   const _SocialUserMenuButton({
     required this.userData,
     required this.themeService,
     required this.authService,
+    required this.onAuthRequired,
   });
 
   @override
@@ -5844,6 +6330,9 @@ class _SocialUserMenuButtonState extends State<_SocialUserMenuButton> {
             case 'profile':
             case 'settings':
             case 'help':
+              if (!widget.authService.isAuthenticated) {
+                widget.onAuthRequired();
+              }
               break;
           }
         },

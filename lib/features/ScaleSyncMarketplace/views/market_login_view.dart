@@ -792,6 +792,38 @@ class _MarketLoginViewState extends State<MarketLoginView> with TickerProviderSt
                               },
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: buttonHeight,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (_) => const MarketplaceGridView()),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.primaryColor),
+                                foregroundColor: AppTheme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                                ),
+                              ),
+                              child: const Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  Icon(Icons.explore_outlined, size: 18),
+                                  SizedBox(width: 8),
+                                  Text(
+                                    'Browse Marketplace as Guest',
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 30),
 
                           // Sign Up Link

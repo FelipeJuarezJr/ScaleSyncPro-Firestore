@@ -836,6 +836,39 @@ class _SocialLoginViewState extends State<SocialLoginView> with TickerProviderSt
                               },
                             ),
                           ),
+                          const SizedBox(height: 16),
+                          SizedBox(
+                            width: double.infinity,
+                            height: buttonHeight,
+                            child: OutlinedButton(
+                              onPressed: () {
+                                Navigator.of(context).pushReplacement(
+                                  MaterialPageRoute(builder: (_) => const SocialFeedView()),
+                                );
+                              },
+                              style: OutlinedButton.styleFrom(
+                                side: const BorderSide(color: AppTheme.primaryColor),
+                                foregroundColor: AppTheme.primaryColor,
+                                shape: RoundedRectangleBorder(
+                                  borderRadius: BorderRadius.circular(AppTheme.borderRadius),
+                                ),
+                              ),
+                              child: Row(
+                                mainAxisAlignment: MainAxisAlignment.center,
+                                children: [
+                                  const Icon(Icons.explore_outlined, size: 18),
+                                  const SizedBox(width: 8),
+                                  Text(
+                                    'Browse Social as Guest',
+                                    style: TextStyle(
+                                      fontSize: buttonFontSize,
+                                      fontWeight: FontWeight.bold,
+                                    ),
+                                  ),
+                                ],
+                              ),
+                            ),
+                          ),
                           const SizedBox(height: 30),
 
                           // Sign Up Link

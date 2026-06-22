@@ -68,6 +68,7 @@ void main() {
     expect(find.text('Remember me'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Browse Marketplace as Guest'), findsOneWidget);
   });
 
   testWidgets('SocialLoginView renders with correct branding and fields', (WidgetTester tester) async {
@@ -99,5 +100,6 @@ void main() {
     expect(find.text('Remember me'), findsOneWidget);
     expect(find.text('Sign In'), findsOneWidget);
     expect(find.text('Continue with Google'), findsOneWidget);
+    expect(find.text('Browse Social as Guest'), findsOneWidget);
   });
 }
