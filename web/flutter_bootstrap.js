@@ -1,8 +1,10 @@
 {{flutter_js}}
 {{flutter_build_config}}
 
+const isLocalhost = window.location.hostname === 'localhost' || window.location.hostname === '127.0.0.1';
+
 _flutter.loader.load({
-  serviceWorkerSettings: {
+  serviceWorkerSettings: isLocalhost ? null : {
     serviceWorkerVersion: {{flutter_service_worker_version}},
   },
   onEntrypointLoaded: async function(engineInitializer) {
