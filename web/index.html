@@ -24,7 +24,32 @@
   <link rel="icon" type="image/png" href="favicon.png"/>
 
   <title>ScaleSyncPro</title>
-  <link rel="manifest" href="manifest.json">
+  <script>
+    (function() {
+      var port = window.location.port;
+      var host = window.location.hostname.toLowerCase();
+      var manifestFile = 'manifest_pro.json';
+      var title = 'ScaleSync Pro';
+      var targetClass = 'target-pro';
+
+      if (host.includes('marketplace') || port === '8082') {
+        manifestFile = 'manifest_market.json';
+        title = 'ScaleSync Marketplace';
+        targetClass = 'target-market';
+      } else if (host.includes('social') || port === '8083') {
+        manifestFile = 'manifest_social.json';
+        title = 'ScaleSync Social';
+        targetClass = 'target-social';
+      }
+
+      document.title = title;
+
+      var link = document.createElement('link');
+      link.rel = 'manifest';
+      link.href = manifestFile;
+      document.head.appendChild(link);
+    })();
+  </script>
 
 
   <style>
@@ -54,40 +79,68 @@
       justify-content: center;
       align-items: center;
       overflow: hidden;
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     }
     .logo {
-      position: absolute;
-      top: 0;
-      left: 0;
-      width: 100%;
-      height: 100%;
-      object-fit: cover;
-      animation: pulse 3s infinite ease-in-out;
+      width: 120px;
+      height: 120px;
+      object-fit: contain;
+      margin-bottom: 24px;
+      animation: pulse 2.5s infinite ease-in-out;
+    }
+    .title {
+      font-size: 24px;
+      font-weight: 600;
+      color: #FFFFFF;
+      letter-spacing: 0.5px;
+      margin-bottom: 32px;
+      opacity: 0.9;
     }
     .loader-bar-container {
-      position: absolute;
-      bottom: 15%;
       width: 200px;
       height: 4px;
-      background-color: rgba(44, 44, 44, 0.8);
+      background-color: rgba(255, 255, 255, 0.1);
       border-radius: 2px;
       overflow: hidden;
-      box-shadow: inset 0 1px 2px rgba(0,0,0,0.4);
       z-index: 2;
     }
     .loader-bar {
       width: 100%;
       height: 100%;
-      background: linear-gradient(90deg, #00FF00, #00D4FF);
       transform: translateX(-100%);
       animation: loading 1.6s infinite cubic-bezier(0.4, 0, 0.2, 1);
     }
+    
+    /* Pro specific styles */
+    .target-pro .logo {
+      filter: drop-shadow(0 0 20px rgba(0, 255, 0, 0.25));
+    }
+    .target-pro .loader-bar {
+      background: linear-gradient(90deg, #00FF00, #00D4FF);
+    }
+
+    /* Market specific styles */
+    .target-market .logo {
+      filter: drop-shadow(0 0 20px rgba(0, 212, 255, 0.25));
+    }
+    .target-market .loader-bar {
+      background: linear-gradient(90deg, #00D4FF, #0072FF);
+    }
+
+    /* Social specific styles */
+    .target-social .logo {
+      filter: drop-shadow(0 0 20px rgba(175, 64, 255, 0.25));
+    }
+    .target-social .loader-bar {
+      background: linear-gradient(90deg, #AF40FF, #FF007F);
+    }
+
     @keyframes pulse {
       0%, 100% {
         transform: scale(1.0);
       }
       50% {
-        transform: scale(1.02);
+        transform: scale(1.04);
       }
     }
     @keyframes loading {
@@ -110,15 +163,34 @@
 <body>
   <div id="splash-screen">
     <div class="logo-container">
-      <picture>
-        <source srcset="scaleSyncProLogo_mobile.png" media="(max-width: 767px)">
-        <img class="logo" src="scaleSyncProLogo_desktop.png" alt="ScaleSync Pro Logo" />
-      </picture>
+      <img class="logo" src="icons/Icon-512.png" alt="ScaleSync Logo" />
+      <div id="splash-title" class="title">ScaleSync</div>
       <div class="loader-bar-container">
         <div class="loader-bar"></div>
       </div>
     </div>
   </div>
+  <script>
+    (function() {
+      var port = window.location.port;
+      var host = window.location.hostname.toLowerCase();
+      var title = 'ScaleSync Pro';
+      var targetClass = 'target-pro';
+
+      if (host.includes('marketplace') || port === '8082') {
+        title = 'ScaleSync Marketplace';
+        targetClass = 'target-market';
+      } else if (host.includes('social') || port === '8083') {
+        title = 'ScaleSync Social';
+        targetClass = 'target-social';
+      }
+
+      var splash = document.getElementById('splash-screen');
+      var titleEl = document.getElementById('splash-title');
+      if (splash) splash.className = targetClass;
+      if (titleEl) titleEl.textContent = title;
+    })();
+  </script>
 
   <script src="flutter_bootstrap.js" async></script>
 </body>
